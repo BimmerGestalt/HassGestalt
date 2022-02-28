@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+    <data class="io.bimmergestalt.hassgestalt.ServerConfigBinding">
+        <variable
+            name="controller"
+            type="io.bimmergestalt.hassgestalt.phoneui.server_config.ServerConfigController" />
+        <variable
+            name="viewModel"
+            type="io.bimmergestalt.hassgestalt.phoneui.server_config.ServerConfigViewModel" />
+    </data>
+
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <EditText
+            android:id="@+id/txt_instance_url"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@{viewModel.serverName}"
+            android:onTextChanged="@{(text, start, before, count) -> controller.setServerName(text)}"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="@{!viewModel.authenticated}"
+            android:text="Login"
+            android:onClick="@{() -> controller.startLogin()}"/>
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="@{viewModel.authenticated}"
+            android:text="Logout"
+            android:onClick="@{() -> controller.logout()}"/>
+    </LinearLayout>
+</layout>

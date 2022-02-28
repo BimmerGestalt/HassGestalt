@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_margin="4dp"
+    tools:context=".phoneui.MainActivity">
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/paneServerSettings"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:name="io.bimmergestalt.hassgestalt.phoneui.server_config.ServerConfigFragment" />
+    <Button
+        android:id="@+id/btn_click3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Try Api" />
+</LinearLayout>
