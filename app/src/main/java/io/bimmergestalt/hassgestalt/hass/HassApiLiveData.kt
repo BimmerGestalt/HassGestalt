@@ -1,5 +1,6 @@
 package io.bimmergestalt.hassgestalt.hass
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import kotlinx.coroutines.CoroutineScope
@@ -23,6 +24,7 @@ class HassApiLiveData(val coroutineScope: CoroutineScope, val serverName: LiveDa
 		val authState = authState.value ?: return
 
 		coroutineScope.launch {
+			Log.i(TAG, "Connecting HassApi to $serverName with authorization ${authState.isAuthorized}")
 			value = HassApi.connect(serverName, authState).await() ?: return@launch
 		}
 

@@ -20,6 +20,11 @@
             </intent-filter>
 
         </activity>
+        <service android:name=".carapp.CarAppService" android:exported="true">
+            <intent-filter>
+                <action android:name="io.bimmergestalt.carconnection.service" />
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>
