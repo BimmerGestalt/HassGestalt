@@ -4,16 +4,18 @@ import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
-import android.widget.EditText
-import com.android.volley.toolbox.Volley
+import androidx.lifecycle.lifecycleScope
 import io.bimmergestalt.hassgestalt.R
+import io.bimmergestalt.hassgestalt.hass.StateTracker
+import io.bimmergestalt.hassgestalt.hass.HassApi
 import io.bimmergestalt.hassgestalt.data.ServerConfig
+import kotlinx.coroutines.launch
+import org.json.JSONObject
 import java.io.InputStream
 import java.net.URL
 import java.nio.charset.Charset
 
 class MainActivity : AppCompatActivity() {
-	val requestQueue by lazy { Volley.newRequestQueue(this) }
 	val serverConfig = ServerConfig()
 
 	override fun onCreate(savedInstanceState: Bundle?) {
@@ -21,7 +23,7 @@ class MainActivity : AppCompatActivity() {
 		setContentView(R.layout.activity_main)
 
 		findViewById<Button>(R.id.btn_click3).setOnClickListener {
-			tryApi()
+			tryWebsocket()
 		}
 	}
 
@@ -31,8 +33,7 @@ class MainActivity : AppCompatActivity() {
 			println("No access token loaded")
 		}
 
-		val inputField = findViewById<EditText>(R.id.txt_instance_url)
-		val enteredUri = Uri.parse(inputField.text.toString()).buildUpon()
+		val enteredUri = Uri.parse(serverConfig.serverName).buildUpon()
 		val uri = enteredUri.encodedPath("/api/states").build()
 //		val uri = enteredUri.encodedPath("/api/config").build()
 		Thread {
@@ -46,5 +47,28 @@ class MainActivity : AppCompatActivity() {
 				println("Unknown content type $stream ${connection.contentType}")
 			}
 		}.start()
+	}
+
+	fun tryWebsocket() {
+		lifecycleScope.launch {
+			val api = HassApi.connect(serverConfig.serverName, serverConfig.authState!!).await()
+			if (api != null) {
+				val states = api.request(JSONObject().apply {
+					put("type", "get_states")
+				})
+				val panels = api.request(JSONObject().apply {
+					put("type", "get_panels")
+				})
+				val panelConfig = api.request(JSONObject().apply {
+					put("type", "lovelace/config")
+					put("url_path", "lovelace-cooper")
+				})
+				println("States: ${states.await()}")
+				println("Panels: ${panels.await()}")
+				println("Cooper Panel: ${panelConfig.await()}")
+				val state = StateTracker(api)
+				state.subscribeAll(lifecycleScope)
+			}
+		}
 	}
 }

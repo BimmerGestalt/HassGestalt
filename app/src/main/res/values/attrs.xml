@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- XML attrs as documented by https://stackoverflow.com/a/52308875/169035 -->
+    <!-- define your attribute name and type -->
+    <attr name="hass_entity_id" format="string"/>
+
+    <!-- now define which arguments your fragment is gonna have (can be more then one) -->
+    <!-- the convention is "FragmentClassName_MembersInjector" -->
+    <declare-styleable name="EntityStateFragment_MembersInjector">
+        <attr name="hass_entity_id"/>
+    </declare-styleable>
+</resources>
