@@ -3,7 +3,7 @@ package io.bimmergestalt.hassgestalt.hass
 import androidx.lifecycle.LiveData
 
 class StateLiveDataManager(val stateTracker: StateTracker) {
-	val liveDatas = HashMap<String, EntityStateLiveData>()
+	private val liveDatas = HashMap<String, EntityStateLiveData>()
 	operator fun get(entityId: String): LiveData<EntityState> =
 		liveDatas.getOrPut(entityId) {
 			EntityStateLiveData(stateTracker.states[entityId])

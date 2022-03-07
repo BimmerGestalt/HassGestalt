@@ -8,4 +8,7 @@ data class EntityState(
 	val attributes: Map<String, Any?>,
 	val lastChanged: OffsetDateTime,
 	) {
+	companion object {
+		val EMPTY = EntityState("", "", emptyMap(), OffsetDateTime.MIN)
+	}
 }

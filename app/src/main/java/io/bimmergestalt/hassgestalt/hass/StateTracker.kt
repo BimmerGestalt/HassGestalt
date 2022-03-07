@@ -9,6 +9,7 @@ import org.json.JSONObject
 class StateTracker(val api: HassApi) {
 	val states = HashMap<String, EntityState>()
 	val liveData = StateLiveDataManager(this)
+	val flow = StateFlowManager(this)
 
 	private var allEventStream: ReceiveChannel<JSONObject>? = null
 
@@ -45,6 +46,7 @@ class StateTracker(val api: HassApi) {
 		val entityId = state.entityId
 		states[entityId] = state
 		liveData.onState(state)
+		flow.onState(state)
 
 		Log.d(TAG, "New state $entityId = $state")
 	}

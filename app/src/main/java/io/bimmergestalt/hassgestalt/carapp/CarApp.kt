@@ -1,7 +1,6 @@
 package io.bimmergestalt.hassgestalt.carapp
 
 import android.util.Log
-import androidx.lifecycle.LiveData
 import de.bmw.idrive.BMWRemoting
 import de.bmw.idrive.BMWRemotingServer
 import de.bmw.idrive.BaseBMWRemotingClient
@@ -13,11 +12,12 @@ import io.bimmergestalt.idriveconnectkit.android.CarAppResources
 import io.bimmergestalt.idriveconnectkit.android.IDriveConnectionStatus
 import io.bimmergestalt.idriveconnectkit.android.security.SecurityAccess
 import io.bimmergestalt.idriveconnectkit.rhmi.*
+import kotlinx.coroutines.flow.Flow
 
 const val TAG = "HassGestalt"
 
 class CarApp(val iDriveConnectionStatus: IDriveConnectionStatus, securityAccess: SecurityAccess,
-             val carAppResources: CarAppResources, val androidResources: AndroidResources, val state: LiveData<StateTracker>
+             val carAppResources: CarAppResources, val androidResources: AndroidResources, val state: Flow<StateTracker>
 ) {
 
     val displayedEntities = listOf("sensor.chillcat_inverter_energy", "sensor.zwave_11_w")

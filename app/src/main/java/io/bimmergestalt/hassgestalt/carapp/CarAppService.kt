@@ -6,6 +6,7 @@ import android.os.IBinder
 import android.os.Looper
 import android.util.Log
 import androidx.lifecycle.LifecycleService
+import androidx.lifecycle.asFlow
 import androidx.lifecycle.switchMap
 import io.bimmergestalt.hassgestalt.L
 import io.bimmergestalt.hassgestalt.OauthAccess
@@ -101,7 +102,7 @@ class CarAppService: LifecycleService() {
 					securityAccess,
 					CarAppAssetResources(applicationContext, "smartthings"),
 					AndroidResources(applicationContext),
-					state,
+					state.asFlow(),
 				)
 			}
 			thread?.start()
