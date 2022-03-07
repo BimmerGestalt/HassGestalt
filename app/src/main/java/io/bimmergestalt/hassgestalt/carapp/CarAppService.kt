@@ -1,29 +1,26 @@
 package io.bimmergestalt.hassgestalt.carapp
 
 import android.content.Intent
-import android.os.Handler
 import android.os.IBinder
-import android.os.Looper
 import android.util.Log
 import androidx.lifecycle.LifecycleService
-import androidx.lifecycle.asFlow
-import androidx.lifecycle.switchMap
+import androidx.lifecycle.lifecycleScope
 import io.bimmergestalt.hassgestalt.L
 import io.bimmergestalt.hassgestalt.OauthAccess
 import io.bimmergestalt.hassgestalt.data.ServerConfig
 import io.bimmergestalt.hassgestalt.data.ServerConfigPersistence
-import io.bimmergestalt.hassgestalt.hass.HassApiLiveData
-import io.bimmergestalt.hassgestalt.hass.StateTrackerLiveData
+import io.bimmergestalt.hassgestalt.hass.StateTracker
+import io.bimmergestalt.hassgestalt.hass.hassApi
 import io.bimmergestalt.idriveconnectkit.android.CarAppAssetResources
 import io.bimmergestalt.idriveconnectkit.android.IDriveConnectionReceiver
 import io.bimmergestalt.idriveconnectkit.android.IDriveConnectionStatus
 import io.bimmergestalt.idriveconnectkit.android.security.SecurityAccess
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.android.asCoroutineDispatcher
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.shareIn
 
 class CarAppService: LifecycleService() {
 
-	val handler = Handler(Looper.getMainLooper())
 	var thread: CarThread? = null
 	var app: CarApp? = null
 
@@ -85,24 +82,26 @@ class CarAppService: LifecycleService() {
 			securityAccess.isConnected() &&
 			thread?.isAlive != true) {
 
-			val dispatcher = handler.asCoroutineDispatcher("HassGestalt")
-			val scope = CoroutineScope(dispatcher)
-			val api = HassApiLiveData(scope, serverConfig.serverNameLive, serverConfig.authStateLive)
-			val state = api.switchMap {
-				StateTrackerLiveData(scope, it)
-			}
-			state.observe(this) { }
-
 			L.loadResources(applicationContext)
 			thread = CarThread("HassGestalt") {
 				Log.i(TAG, "CarThread is ready, starting CarApp")
 
+				val hassApi = serverConfig.flow.hassApi().flatMapLatest { api ->
+					callbackFlow {
+						val stateTracker = StateTracker(api)
+						stateTracker.subscribeAll(this@CarAppService.lifecycleScope)
+						send(stateTracker)
+						awaitClose {
+							stateTracker.unsubscribeAll()
+						}
+					}
+				}.shareIn(this.lifecycleScope, SharingStarted.WhileSubscribed())
 				app = CarApp(
 					iDriveConnectionStatus,
 					securityAccess,
 					CarAppAssetResources(applicationContext, "smartthings"),
 					AndroidResources(applicationContext),
-					state.asFlow(),
+					hassApi,
 				)
 			}
 			thread?.start()
