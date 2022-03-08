@@ -30,4 +30,14 @@
         android:layout_height="wrap_content"
         app:hass_entity_id = "sensor.zwave_11_w"
         android:name="io.bimmergestalt.hassgestalt.phoneui.hass.EntityStateFragment" />
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/paneDashboardList"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:name="io.bimmergestalt.hassgestalt.phoneui.hass.DashboardListFragment" />
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/paneDashboardView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:name="io.bimmergestalt.hassgestalt.phoneui.hass.DashboardViewFragment" />
 </LinearLayout>

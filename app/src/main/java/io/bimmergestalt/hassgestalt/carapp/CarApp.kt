@@ -4,7 +4,9 @@ import android.util.Log
 import de.bmw.idrive.BMWRemoting
 import de.bmw.idrive.BMWRemotingServer
 import de.bmw.idrive.BaseBMWRemotingClient
+import io.bimmergestalt.hassgestalt.carapp.views.DashboardView
 import io.bimmergestalt.hassgestalt.carapp.views.HomeView
+import io.bimmergestalt.hassgestalt.hass.LovelaceConfig
 import io.bimmergestalt.hassgestalt.hass.StateTracker
 import io.bimmergestalt.idriveconnectkit.IDriveConnection
 import io.bimmergestalt.idriveconnectkit.Utils.rhmi_setResourceCached
@@ -17,13 +19,15 @@ import kotlinx.coroutines.flow.Flow
 const val TAG = "HassGestalt"
 
 class CarApp(val iDriveConnectionStatus: IDriveConnectionStatus, securityAccess: SecurityAccess,
-             val carAppResources: CarAppResources, val androidResources: AndroidResources, val state: Flow<StateTracker>
+             val carAppResources: CarAppResources, val androidResources: AndroidResources,
+             val state: Flow<StateTracker>, val lovelaceConfig: Flow<LovelaceConfig>
 ) {
 
     val displayedEntities = listOf("sensor.chillcat_inverter_energy", "sensor.zwave_11_w")
     val carConnection: BMWRemotingServer
     val carApp: RHMIApplication
     val homeView: HomeView
+    val dashboardView: DashboardView
 
     init {
         Log.i(TAG, "Starting connecting to car")
@@ -35,7 +39,9 @@ class CarApp(val iDriveConnectionStatus: IDriveConnectionStatus, securityAccess:
         carConnection.sas_login(sas_response)
 
         carApp = createRhmiApp()
-        homeView = HomeView(carApp.states.values.first {HomeView.fits(it)}, state, displayedEntities)
+        homeView = HomeView(carApp.states.values.first {HomeView.fits(it)}, state, lovelaceConfig, displayedEntities)
+        dashboardView = DashboardView(carApp.states.values.first {it != homeView.state && DashboardView.fits(it)}, state, lovelaceConfig)
+
 
         initWidgets()
         Log.i(TAG, "CarApp running")
@@ -65,7 +71,8 @@ class CarApp(val iDriveConnectionStatus: IDriveConnectionStatus, securityAccess:
         carApp.components.values.filterIsInstance<RHMIComponent.EntryButton>().forEach {
             it.getAction()?.asHMIAction()?.getTargetModel()?.asRaIntModel()?.value = homeView.state.id
         }
-        homeView.initWidgets()
+        homeView.initWidgets(dashboardView)
+        dashboardView.initWidgets()
     }
 
     fun onDestroy() {

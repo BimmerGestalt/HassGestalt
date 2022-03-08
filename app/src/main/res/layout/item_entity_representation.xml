@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+    <data class="io.bimmergestalt.hassgestalt.DashboardRepresentationItemBinding">
+        <variable
+            name="entityRepresentation"
+            type="androidx.lifecycle.LiveData&lt;io.bimmergestalt.hassgestalt.hass.EntityRepresentation&gt;" />
+    </data>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@{entityRepresentation.name}" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:text="@{entityRepresentation.state}" />
+    </LinearLayout>
+</layout>

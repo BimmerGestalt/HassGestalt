@@ -3,4 +3,5 @@
 
     <!-- Car Strings, must provide every string from L.kt -->
     <string name="APP_NAME">HASS Gestalt</string>
+    <string name="DASHBOARD_LIST">Dashboards</string>
 </resources>

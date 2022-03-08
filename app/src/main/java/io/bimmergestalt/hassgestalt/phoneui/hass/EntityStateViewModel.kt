@@ -8,8 +8,8 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 
 class EntityStateViewModel(stateLiveData: Flow<EntityState>): ViewModel() {
+	@Suppress("UNCHECKED_CAST")
 	class Factory(val stateTracker: Flow<StateTracker>, private val entityId: String): ViewModelProvider.Factory {
-		@Suppress("UNCHECKED_CAST")
 		override fun <T : ViewModel> create(modelClass: Class<T>): T {
 			val stateLiveData = stateTracker.flatMapLatest {
 				println("Locating flow for $entityId: ${it.flow[entityId]}")

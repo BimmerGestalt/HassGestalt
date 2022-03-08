@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <data class="io.bimmergestalt.hassgestalt.DashboardListBinding">
+        <variable
+            name="viewModel"
+            type="io.bimmergestalt.hassgestalt.phoneui.hass.DashboardListViewModel" />
+    </data>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingBottom="4dp">
+        <ListView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:items="@{viewModel.dashboardItems}"
+            app:itemBinding="@{viewModel.dashboardItemsBinding}"/>
+
+    </LinearLayout>
+</layout>

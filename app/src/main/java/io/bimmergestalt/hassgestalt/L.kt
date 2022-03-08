@@ -16,6 +16,8 @@ object L {
 	// these default string values are used in tests, Android resources are used for real
 	val APP_NAME by StringResourceDelegate("HassGestalt")
 
+	val DASHBOARD_LIST by StringResourceDelegate("Dashboards")
+
 	fun loadResources(context: Context, locale: Locale? = null) {
 		val thisContext = if (locale == null) { context } else {
 			val origConf = context.resources.configuration

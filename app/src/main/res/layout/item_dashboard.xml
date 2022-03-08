@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+    <data class="io.bimmergestalt.hassgestalt.DashboardItemBinding">
+        <variable
+            name="viewModel"
+            type="io.bimmergestalt.hassgestalt.phoneui.hass.DashboardListViewModel" />
+        <variable
+            name="dashboardHeader"
+            type="io.bimmergestalt.hassgestalt.hass.DashboardHeader" />
+    </data>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:onClick="@{() -> viewModel.setCurrentSelection(dashboardHeader)}">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@{dashboardHeader.title}"
+            />
+
+    </LinearLayout>
+</layout>
