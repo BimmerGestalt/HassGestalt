@@ -77,4 +77,8 @@ class OauthAccess(private val context: Context, private val previousAuthState: A
 //			Log.d(TAG, "Not refreshing token: refreshToken isNull:${authState.refreshToken == null} needsRefresh:${authState.needsTokenRefresh} accessToken isNull:${authState.accessToken == null}")
 		}
 	}
+
+	fun dispose() {
+		authService.dispose()
+	}
 }

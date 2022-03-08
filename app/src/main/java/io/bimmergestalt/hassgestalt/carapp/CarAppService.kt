@@ -114,5 +114,6 @@ class CarAppService: LifecycleService() {
 		super.onDestroy()
 
 		app?.onDestroy()
+		oauthAccess.dispose()
 	}
 }

@@ -39,4 +39,8 @@ class ServerConfigFragment: Fragment() {
 		oauthAccess.handleAuthorizationResponse(requireActivity().intent)
 	}
 
+	override fun onDestroy() {
+		super.onDestroy()
+		oauthAccess.dispose()
+	}
 }
