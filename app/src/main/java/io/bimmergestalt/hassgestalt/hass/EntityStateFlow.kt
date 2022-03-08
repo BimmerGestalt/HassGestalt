@@ -1,7 +1,17 @@
 package io.bimmergestalt.hassgestalt.hass
 
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.*
+
+fun Flow<HassApi>.stateTracker(): Flow<StateTracker> = flatMapLatest { hassApi ->
+	callbackFlow {
+		val stateTracker = StateTracker(hassApi)
+		stateTracker.subscribeAll(this)
+		send(stateTracker)
+		awaitClose {
+			stateTracker.unsubscribeAll()
+		}
+}}
 
 class StateFlowManager(val stateTracker: StateTracker) {
 	private val flows = HashMap<String, MutableStateFlow<EntityState>>()

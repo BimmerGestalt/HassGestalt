@@ -10,13 +10,12 @@ import io.bimmergestalt.hassgestalt.OauthAccess
 import io.bimmergestalt.hassgestalt.data.ServerConfig
 import io.bimmergestalt.hassgestalt.data.ServerConfigPersistence
 import io.bimmergestalt.hassgestalt.hass.LovelaceConfig
-import io.bimmergestalt.hassgestalt.hass.StateTracker
 import io.bimmergestalt.hassgestalt.hass.hassApi
+import io.bimmergestalt.hassgestalt.hass.stateTracker
 import io.bimmergestalt.idriveconnectkit.android.CarAppAssetResources
 import io.bimmergestalt.idriveconnectkit.android.IDriveConnectionReceiver
 import io.bimmergestalt.idriveconnectkit.android.IDriveConnectionStatus
 import io.bimmergestalt.idriveconnectkit.android.security.SecurityAccess
-import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 
 class CarAppService: LifecycleService() {
@@ -88,16 +87,8 @@ class CarAppService: LifecycleService() {
 
 				val hassApi = serverConfig.flow.hassApi()
 					.shareIn(this.lifecycleScope, SharingStarted.WhileSubscribed(stopTimeoutMillis = 20000), 1)
-				val state = hassApi.flatMapLatest { api ->
-					callbackFlow {
-						val stateTracker = StateTracker(api)
-						stateTracker.subscribeAll(this@CarAppService.lifecycleScope)
-						send(stateTracker)
-						awaitClose {
-							stateTracker.unsubscribeAll()
-						}
-					}
-				}.shareIn(this.lifecycleScope, SharingStarted.WhileSubscribed(stopTimeoutMillis = 20000), 1)
+				val state = hassApi.stateTracker()
+					.shareIn(this.lifecycleScope, SharingStarted.WhileSubscribed(stopTimeoutMillis = 20000), 1)
 				val lovelaceConfig = hassApi.map {
 					LovelaceConfig(it)
 				}
