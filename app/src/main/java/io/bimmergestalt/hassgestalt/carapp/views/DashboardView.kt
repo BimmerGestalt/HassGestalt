@@ -1,22 +1,14 @@
 package io.bimmergestalt.hassgestalt.carapp.views
 
+import android.util.SparseArray
 import io.bimmergestalt.hassgestalt.L
 import io.bimmergestalt.hassgestalt.carapp.rhmiDataTableFlow
-import io.bimmergestalt.hassgestalt.hass.DashboardHeader
-import io.bimmergestalt.hassgestalt.hass.LovelaceConfig
-import io.bimmergestalt.hassgestalt.hass.LovelaceDashboard
-import io.bimmergestalt.hassgestalt.hass.StateTracker
-import io.bimmergestalt.idriveconnectkit.rhmi.FocusCallback
-import io.bimmergestalt.idriveconnectkit.rhmi.RHMIComponent
-import io.bimmergestalt.idriveconnectkit.rhmi.RHMIProperty
-import io.bimmergestalt.idriveconnectkit.rhmi.RHMIState
+import io.bimmergestalt.hassgestalt.hass.*
+import io.bimmergestalt.idriveconnectkit.rhmi.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 
-class DashboardView(val state: RHMIState, val hassState: Flow<StateTracker>, val lovelaceConfig: Flow<LovelaceConfig>) {
+class DashboardView(val state: RHMIState, val hassApi: Flow<HassApi>, val hassState: Flow<StateTracker>, val lovelaceConfig: Flow<LovelaceConfig>) {
 	companion object {
 		fun fits(state: RHMIState): Boolean {
 			return state is RHMIState.PlainState &&
@@ -28,6 +20,7 @@ class DashboardView(val state: RHMIState, val hassState: Flow<StateTracker>, val
 
 	var currentDashboard: DashboardHeader? = null
 	val listComponent = state.componentsList.filterIsInstance<RHMIComponent.List>().first()
+	val listElements = SparseArray<EntityRepresentation>()
 
 	fun initWidgets() {
 		state.getTextModel()?.asRaDataModel()?.value = L.APP_NAME
@@ -42,18 +35,30 @@ class DashboardView(val state: RHMIState, val hassState: Flow<StateTracker>, val
 
 		listComponent.setVisible(true)
 		listComponent.setProperty(RHMIProperty.PropertyId.LIST_COLUMNWIDTH, "*,150")
+		listComponent.getAction()?.asRAAction()?.rhmiActionCallback = RHMIActionListCallback {
+			listElements[it]?.tryClick()
+		}
 	}
 
 	private suspend fun onShow() {
 		state.getTextModel()?.asRaDataModel()?.value = currentDashboard?.title ?: "[Unknown]"
 
-		lovelaceConfig.map { config ->
+		val dashboardConfig = lovelaceConfig.map { config ->
 			val currentDashboard = currentDashboard
 			if (currentDashboard != null) {
 				config.getDashboardConfig(currentDashboard.url_path)
 			} else { LovelaceDashboard(emptyList()) }
-		}.combine(hassState) { dashboard, stateTracker ->
-			dashboard.flatten(stateTracker)
+		}
+		combine(hassApi, hassState, dashboardConfig) { hassApi, hassState, dashboard ->
+			dashboard.flatten(hassApi, hassState)
+		}.map { list ->
+			// memoize the EntityControllers for handling the row click handler
+			listElements.clear()
+			list.mapIndexed { index, flow ->
+				flow.map { entity ->
+					entity.also { listElements.put(index, it) }
+				}
+			}
 		}.rhmiDataTableFlow { item -> arrayOf(
 			item.name,
 			item.state

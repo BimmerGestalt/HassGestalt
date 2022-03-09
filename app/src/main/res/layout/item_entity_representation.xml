@@ -20,5 +20,10 @@
             android:paddingStart="8dp"
             android:paddingEnd="8dp"
             android:text="@{entityRepresentation.state}" />
+        <Button
+            android:layout_width="40dp"
+            android:layout_height="30dp"
+            android:visibility="@{entityRepresentation.action != null}"
+            android:onClick="@{() -> entityRepresentation.tryClick()}" />
     </LinearLayout>
 </layout>

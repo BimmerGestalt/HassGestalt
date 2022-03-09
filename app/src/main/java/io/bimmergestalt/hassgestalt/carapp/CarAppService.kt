@@ -97,7 +97,7 @@ class CarAppService: LifecycleService() {
 					securityAccess,
 					CarAppAssetResources(applicationContext, "smartthings"),
 					AndroidResources(applicationContext),
-					state, lovelaceConfig,
+					hassApi, state, lovelaceConfig,
 				)
 			}
 			thread?.start()

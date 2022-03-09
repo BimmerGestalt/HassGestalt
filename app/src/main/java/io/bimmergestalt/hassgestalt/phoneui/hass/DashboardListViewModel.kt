@@ -27,12 +27,13 @@ class DashboardListViewModel(val hassApi: Flow<HassApi>, val stateTracker: Flow<
 	val currentSelection = MutableLiveData<DashboardHeader?>(null)
 	val currentSelectionTitle = currentSelection.map {it?.title ?: ""}
 
-	val dashboardEntities = lovelaceConfig.combine(currentSelection.asFlow()) { config, selected ->
+	val dashboardConfig = lovelaceConfig.combine(currentSelection.asFlow()) { config, selected ->
 		if (selected != null) {
 			config.getDashboardConfig(selected.url_path)
 		} else { LovelaceDashboard(emptyList()) }
-	}.combine(stateTracker) { dashboard, stateTracker ->
-		dashboard.flatten(stateTracker)
+	}
+	val dashboardEntities = combine(hassApi, stateTracker, dashboardConfig) { hassApi, stateTracker, dashboard ->
+		dashboard.flatten(hassApi, stateTracker)
 			.map {it.asLiveData()}
 	}.asObservableList(viewModelScope)
 	val dashboardEntitiesBinding = ItemBinding.of<LiveData<EntityRepresentation>>(BR.entityRepresentation, R.layout.item_entity_representation)

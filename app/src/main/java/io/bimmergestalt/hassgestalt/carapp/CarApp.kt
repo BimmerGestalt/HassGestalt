@@ -6,6 +6,7 @@ import de.bmw.idrive.BMWRemotingServer
 import de.bmw.idrive.BaseBMWRemotingClient
 import io.bimmergestalt.hassgestalt.carapp.views.DashboardView
 import io.bimmergestalt.hassgestalt.carapp.views.HomeView
+import io.bimmergestalt.hassgestalt.hass.HassApi
 import io.bimmergestalt.hassgestalt.hass.LovelaceConfig
 import io.bimmergestalt.hassgestalt.hass.StateTracker
 import io.bimmergestalt.idriveconnectkit.IDriveConnection
@@ -20,7 +21,7 @@ const val TAG = "HassGestalt"
 
 class CarApp(val iDriveConnectionStatus: IDriveConnectionStatus, securityAccess: SecurityAccess,
              val carAppResources: CarAppResources, val androidResources: AndroidResources,
-             val state: Flow<StateTracker>, val lovelaceConfig: Flow<LovelaceConfig>
+             val hassApi: Flow<HassApi>, val state: Flow<StateTracker>, val lovelaceConfig: Flow<LovelaceConfig>
 ) {
 
     val displayedEntities = listOf("sensor.chillcat_inverter_energy", "sensor.zwave_11_w")
@@ -40,7 +41,7 @@ class CarApp(val iDriveConnectionStatus: IDriveConnectionStatus, securityAccess:
 
         carApp = createRhmiApp()
         homeView = HomeView(carApp.states.values.first {HomeView.fits(it)}, state, lovelaceConfig, displayedEntities)
-        dashboardView = DashboardView(carApp.states.values.first {it != homeView.state && DashboardView.fits(it)}, state, lovelaceConfig)
+        dashboardView = DashboardView(carApp.states.values.first {it != homeView.state && DashboardView.fits(it)}, hassApi, state, lovelaceConfig)
 
 
         initWidgets()

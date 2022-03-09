@@ -6,7 +6,7 @@ import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 
-class StateTracker(val api: HassApi) {
+class StateTracker(private val api: HassApi) {
 	val states = HashMap<String, EntityState>()
 	val liveData = StateLiveDataManager(this)
 	val flow = StateFlowManager(this)

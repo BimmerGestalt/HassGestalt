@@ -3,8 +3,8 @@ package io.bimmergestalt.hassgestalt.hass
 import android.util.Log
 import io.bimmergestalt.hassgestalt.data.JsonHelpers.forEach
 import io.bimmergestalt.hassgestalt.data.JsonHelpers.map
+import io.bimmergestalt.hassgestalt.hass.EntityRepresentation.Companion.gainControl
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import org.json.JSONObject
 import java.util.ArrayList
 
@@ -46,14 +46,14 @@ class LovelaceDashboard(val cards: List<LovelaceCard>) {
 		}
 	}
 
-	fun flatten(stateTracker: StateTracker): List<Flow<EntityRepresentation>> {
+	fun flatten(hassApi: HassApi, stateTracker: StateTracker): List<Flow<EntityRepresentation>> {
 		val results = ArrayList<Flow<EntityRepresentation>>()
 		cards.forEach { card ->
 			when (card) {
 				is LovelaceCardEntities -> results.addAll(card.entities.map { id ->
-					stateTracker.flow[id].map { EntityRepresentation.fromEntityState(it) }
+					stateTracker.flow[id].gainControl(hassApi)
 				})
-				is LovelaceCardSensor -> results.add(stateTracker.flow[card.entityId].map {EntityRepresentation.fromEntityState(it)})
+				is LovelaceCardSensor -> results.add(stateTracker.flow[card.entityId].gainControl(hassApi))
 			}
 		}
 		return results
