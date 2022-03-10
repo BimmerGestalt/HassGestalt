@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.Flow
 const val TAG = "HassGestalt"
 
 class CarApp(val iDriveConnectionStatus: IDriveConnectionStatus, securityAccess: SecurityAccess,
-             val carAppResources: CarAppResources, val androidResources: AndroidResources,
+             val carAppResources: CarAppResources, val iconRenderer: IconRenderer,
              val hassApi: Flow<HassApi>, val state: Flow<StateTracker>, val lovelaceConfig: Flow<LovelaceConfig>
 ) {
 
@@ -40,8 +40,8 @@ class CarApp(val iDriveConnectionStatus: IDriveConnectionStatus, securityAccess:
         carConnection.sas_login(sas_response)
 
         carApp = createRhmiApp()
-        homeView = HomeView(carApp.states.values.first {HomeView.fits(it)}, state, lovelaceConfig, displayedEntities)
-        dashboardView = DashboardView(carApp.states.values.first {it != homeView.state && DashboardView.fits(it)}, hassApi, state, lovelaceConfig)
+        homeView = HomeView(carApp.states.values.first {HomeView.fits(it)}, iconRenderer, state, lovelaceConfig, displayedEntities)
+        dashboardView = DashboardView(carApp.states.values.first {it != homeView.state && DashboardView.fits(it)}, iconRenderer, hassApi, state, lovelaceConfig)
 
 
         initWidgets()

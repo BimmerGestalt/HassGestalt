@@ -2,13 +2,15 @@ package io.bimmergestalt.hassgestalt.carapp.views
 
 import android.util.SparseArray
 import io.bimmergestalt.hassgestalt.L
+import io.bimmergestalt.hassgestalt.carapp.IconRenderer
 import io.bimmergestalt.hassgestalt.carapp.rhmiDataTableFlow
 import io.bimmergestalt.hassgestalt.hass.*
 import io.bimmergestalt.idriveconnectkit.rhmi.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
-class DashboardView(val state: RHMIState, val hassApi: Flow<HassApi>, val hassState: Flow<StateTracker>, val lovelaceConfig: Flow<LovelaceConfig>) {
+class DashboardView(val state: RHMIState, val iconRenderer: IconRenderer,
+                    val hassApi: Flow<HassApi>, val hassState: Flow<StateTracker>, val lovelaceConfig: Flow<LovelaceConfig>) {
 	companion object {
 		fun fits(state: RHMIState): Boolean {
 			return state is RHMIState.PlainState &&
@@ -34,7 +36,7 @@ class DashboardView(val state: RHMIState, val hassApi: Flow<HassApi>, val hassSt
 		}
 
 		listComponent.setVisible(true)
-		listComponent.setProperty(RHMIProperty.PropertyId.LIST_COLUMNWIDTH, "*,150")
+		listComponent.setProperty(RHMIProperty.PropertyId.LIST_COLUMNWIDTH, "50,*,150")
 		listComponent.getAction()?.asRAAction()?.rhmiActionCallback = RHMIActionListCallback {
 			listElements[it]?.tryClick()
 		}
@@ -60,6 +62,8 @@ class DashboardView(val state: RHMIState, val hassApi: Flow<HassApi>, val hassSt
 				}
 			}
 		}.rhmiDataTableFlow { item -> arrayOf(
+			item.icon?.let {iconRenderer.render(it, 46, 46)}
+				?.let {iconRenderer.compress(it, 100)} ?: "",
 			item.name,
 			item.state
 		)}.collect {

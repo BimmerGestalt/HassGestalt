@@ -2,6 +2,7 @@ package io.bimmergestalt.hassgestalt.carapp.views
 
 import android.util.Log
 import io.bimmergestalt.hassgestalt.L
+import io.bimmergestalt.hassgestalt.carapp.IconRenderer
 import io.bimmergestalt.hassgestalt.carapp.TAG
 import io.bimmergestalt.hassgestalt.carapp.rhmiDataTableFlow
 import io.bimmergestalt.hassgestalt.hass.DashboardHeader
@@ -11,7 +12,7 @@ import io.bimmergestalt.idriveconnectkit.rhmi.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
-class HomeView(val state: RHMIState, val hassState: Flow<StateTracker>, val lovelaceConfig: Flow<LovelaceConfig>, val displayedEntities: List<String>) {
+class HomeView(val state: RHMIState, val iconRenderer: IconRenderer, val hassState: Flow<StateTracker>, val lovelaceConfig: Flow<LovelaceConfig>, val displayedEntities: List<String>) {
 	companion object {
 		fun fits(state: RHMIState): Boolean {
 			return state is RHMIState.PlainState &&
@@ -70,11 +71,11 @@ class HomeView(val state: RHMIState, val hassState: Flow<StateTracker>, val love
 		coroutineScope.launch {
 			lovelaceConfig.collectLatest { lovelaceConfig ->
 				dashboards = lovelaceConfig.getDashboardList()
-				Log.i(TAG, "Received Lovelace dashboard list: $dashboards")
 				dashboardList.getModel()?.value = object : RHMIModel.RaListModel.RHMIListAdapter<DashboardHeader>(2, dashboards) {
 					override fun convertRow(index: Int, item: DashboardHeader): Array<Any> =
 						arrayOf(
-							"", // icon
+							item.iconDrawable?.let {iconRenderer.render(it, 46, 46)}
+								?.let {iconRenderer.compress(it, 100)} ?: "",
 							item.title,
 						)
 				}

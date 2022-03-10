@@ -39,7 +39,7 @@ class EntityController(val hassApi: HassApi, val entityState: EntityState, val p
 			else -> throw AssertionError("Unknown domain type $domain for entity ${entityState.entityId}")
 		}
 		val commandDomain = if (domain == "group") "homeassistant" else domain
-		pendingFlow.tryEmit(EntityRepresentation.fromEntityState(entityState).copy(state = "..."))
+		pendingFlow.tryEmit(EntityRepresentation.fromEntityState(entityState, null).copy(state = "..."))
 		hassApi.request(JSONObject().apply {
 			put("type", "call_service")
 			put("domain", commandDomain)

@@ -85,6 +85,7 @@ class CarAppService: LifecycleService() {
 			thread = CarThread("HassGestalt") {
 				Log.i(TAG, "CarThread is ready, starting CarApp")
 
+				val iconRenderer = IconRenderer(this)
 				val hassApi = serverConfig.flow.hassApi()
 					.shareIn(this.lifecycleScope, SharingStarted.WhileSubscribed(stopTimeoutMillis = 20000), 1)
 				val state = hassApi.stateTracker()
@@ -96,7 +97,7 @@ class CarAppService: LifecycleService() {
 					iDriveConnectionStatus,
 					securityAccess,
 					CarAppAssetResources(applicationContext, "smartthings"),
-					AndroidResources(applicationContext),
+					iconRenderer,
 					hassApi, state, lovelaceConfig,
 				)
 			}

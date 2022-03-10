@@ -6,6 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_margin="4dp"
+    android:padding="8dp"
     tools:context=".phoneui.MainActivity">
 
     <androidx.fragment.app.FragmentContainerView
