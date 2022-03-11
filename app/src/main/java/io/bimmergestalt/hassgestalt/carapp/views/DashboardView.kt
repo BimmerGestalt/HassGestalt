@@ -3,6 +3,7 @@ package io.bimmergestalt.hassgestalt.carapp.views
 import android.util.SparseArray
 import io.bimmergestalt.hassgestalt.L
 import io.bimmergestalt.hassgestalt.carapp.IconRenderer
+import io.bimmergestalt.hassgestalt.carapp.batchDataTables
 import io.bimmergestalt.hassgestalt.carapp.rhmiDataTableFlow
 import io.bimmergestalt.hassgestalt.hass.*
 import io.bimmergestalt.idriveconnectkit.rhmi.*
@@ -66,7 +67,7 @@ class DashboardView(val state: RHMIState, val iconRenderer: IconRenderer,
 				?.let {iconRenderer.compress(it, 100)} ?: "",
 			item.name,
 			item.state
-		)}.collect {
+		)}.batchDataTables().collect {
 			listComponent.app.setModel(listComponent.model, it)
 		}
 	}

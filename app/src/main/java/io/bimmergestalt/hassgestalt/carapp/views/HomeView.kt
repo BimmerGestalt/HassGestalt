@@ -1,9 +1,8 @@
 package io.bimmergestalt.hassgestalt.carapp.views
 
-import android.util.Log
 import io.bimmergestalt.hassgestalt.L
 import io.bimmergestalt.hassgestalt.carapp.IconRenderer
-import io.bimmergestalt.hassgestalt.carapp.TAG
+import io.bimmergestalt.hassgestalt.carapp.batchDataTables
 import io.bimmergestalt.hassgestalt.carapp.rhmiDataTableFlow
 import io.bimmergestalt.hassgestalt.hass.DashboardHeader
 import io.bimmergestalt.hassgestalt.hass.LovelaceConfig
@@ -63,6 +62,7 @@ class HomeView(val state: RHMIState, val iconRenderer: IconRenderer, val hassSta
 							item.state + (item.attributes["unit_of_measurement"] as? String ?: "")
 						)
 					}
+					.batchDataTables()
 					.collect {
 						list.app.setModel(list.model, it)
 					}
