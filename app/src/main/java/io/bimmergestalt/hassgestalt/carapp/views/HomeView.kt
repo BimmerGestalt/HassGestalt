@@ -53,9 +53,9 @@ class HomeView(val state: RHMIState, val iconRenderer: IconRenderer, val hassSta
 
 	private suspend fun onShow() {
 		coroutineScope.launch {
-			hassState.collectLatest { state: StateTracker ->
+			hassState.collectLatest { states: StateTracker ->
 				displayedEntities
-					.map { id: String -> state.flow[id] }
+					.map { id: String -> states[id] }
 					.rhmiDataTableFlow { item ->
 						arrayOf(
 							item.attributes["friendly_name"] as? String ?: item.entityId,

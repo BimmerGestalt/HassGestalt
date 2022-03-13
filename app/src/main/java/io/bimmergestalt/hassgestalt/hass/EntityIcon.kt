@@ -144,7 +144,11 @@ object EntityIcon {
 		var numericState = state.toIntOrNull()
 		return if (numericState != null) {
 			numericState = max(0, min(100, numericState)).div(10).times(10)
-			"mdi:battery-$numericState"
+			if (numericState == 100) {
+				"mdi:battery"
+			} else {
+				"mdi:battery-$numericState"
+			}
 		} else {
 			if (state == "on") "mdi:battery-alert-variant-outline" else "mdi:battery"
 		}

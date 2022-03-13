@@ -39,6 +39,10 @@ class DashboardListViewModel(val hassApi: Flow<HassApi>, val stateTracker: Flow<
 	val dashboardEntitiesBinding = ItemBinding.of<LiveData<EntityRepresentation>>(BR.entityRepresentation, R.layout.item_entity_representation)
 
 	fun setCurrentSelection(value: DashboardHeader) {
-		currentSelection.value = value
+		if (currentSelection.value == value) {
+			currentSelection.value = null
+		} else {
+			currentSelection.value = value
+		}
 	}
 }

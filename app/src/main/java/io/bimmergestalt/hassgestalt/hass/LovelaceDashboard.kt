@@ -53,9 +53,9 @@ class LovelaceDashboard(val cards: List<LovelaceCard>) {
 		cards.forEach { card ->
 			when (card) {
 				is LovelaceCardEntities -> results.addAll(card.entities.map { id ->
-					stateTracker.flow[id].gainControl(hassApi)
+					stateTracker[id].gainControl(hassApi)
 				})
-				is LovelaceCardSensor -> results.add(stateTracker.flow[card.entityId].gainControl(hassApi))
+				is LovelaceCardSensor -> results.add(stateTracker[card.entityId].gainControl(hassApi))
 			}
 		}
 		return results

@@ -9,7 +9,9 @@ import net.openid.appauth.AuthState
 class ServerConfig() {
 	companion object {
 		private var serverName: String = ""
-			set(value) {field=value; _serverNameLive.value=value; _flow.value = ServerConfig()}
+			set(value) { if (field != value) {
+				field=value; _serverNameLive.value=value; _flow.value = ServerConfig()
+			}}
 		private val _serverNameLive = MutableLiveData<String>(serverName)
 		private val serverNameLive: LiveData<String> = _serverNameLive
 

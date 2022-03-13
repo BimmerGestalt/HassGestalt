@@ -2,6 +2,7 @@ package io.bimmergestalt.hassgestalt.hass
 
 import android.util.Log
 import org.java_websocket.client.WebSocketClient
+import org.java_websocket.exceptions.WebsocketNotConnectedException
 import org.java_websocket.handshake.ServerHandshake
 import org.json.JSONException
 import org.json.JSONObject
@@ -42,6 +43,8 @@ class HassWsClient(val wsURI: URI, val callback: HassApi.Callback): WebSocketCli
 	}
 
 	fun send(message: JSONObject) {
-		send(message.toString())
+		try {
+			send(message.toString())
+		} catch (e: WebsocketNotConnectedException) {}
 	}
 }

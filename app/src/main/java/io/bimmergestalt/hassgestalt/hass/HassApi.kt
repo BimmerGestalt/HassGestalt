@@ -5,9 +5,10 @@ import android.util.Log
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.ReceiveChannel
-import kotlinx.coroutines.channels.SendChannel
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.runBlocking
 import net.openid.appauth.AuthState
 import org.json.JSONException
@@ -43,7 +44,7 @@ class HassApi(val wsURI: URI, val authState: AuthState) {
 		get() = client.connected
 
 	private var id: Int = 1
-	val subscriptions = HashMap<Int, SendChannel<JSONObject>>()
+	val subscriptions = HashMap<Int, MutableSharedFlow<JSONObject>>()
 	val pendingCommands = HashMap<Int, CompletableDeferred<JSONObject>>()
 
 	fun connectAsync(): Deferred<HassApi?> {
@@ -66,28 +67,35 @@ class HassApi(val wsURI: URI, val authState: AuthState) {
 		client.close()
 	}
 
-	fun subscribe(subscription: JSONObject): ReceiveChannel<JSONObject> {
-		if (!isConnected) return Channel()
-		val channel = synchronized(this) {
-			val channel = Channel<JSONObject>(64)
-			subscriptions[id] = channel
-			subscription.put("id", id)
+	fun subscribe(subscription: JSONObject): Flow<JSONObject> {
+		if (!isConnected) return MutableSharedFlow()
+		return synchronized(this) {
+			val subscriptionId = id
+			val result = MutableSharedFlow<JSONObject>(1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+			subscriptions[subscriptionId] = result
+			subscription.put("id", subscriptionId)
 			id++
-			channel
+			client.send(subscription)
+			result.onCompletion {
+				println("Unsubscribing $subscriptionId")
+				unsubscribe(subscriptionId)
+			}
 		}
-		client.send(subscription)
-		return channel
 	}
 
-	fun unsubscribe(subscriptionId: Int, unsubscription: JSONObject) {
+	fun unsubscribe(subscriptionId: Int) {
 		if (!isConnected) return
 		synchronized(this) {
-			subscriptions.remove(subscriptionId)?.close()
-			unsubscription.put("id", id)
+			val requestId = id
 			id++
+
+			val unsubscription = JSONObject().apply {
+				put("id", requestId)
+				put("type", "unsubscribe_events")
+				put("subscription", subscriptionId)
+			}
+			client.send(unsubscription)
 		}
-		unsubscription.put("subscription", subscriptionId)
-		client.send(unsubscription)
 	}
 
 	fun onEvent(event: JSONObject) {
@@ -102,11 +110,10 @@ class HassApi(val wsURI: URI, val authState: AuthState) {
 		}
 		runBlocking {
 			try {
-				subscription?.send(event)
+				subscription?.emit(event)
 			} catch (e: CancellationException) {
-				unsubscribe(id, JSONObject().apply {
-					put("type", "unsubscribe_events")
-				})
+				Log.d(TAG, "Unsubscribing from subscription $id")
+				unsubscribe(id)
 			}
 		}
 	}

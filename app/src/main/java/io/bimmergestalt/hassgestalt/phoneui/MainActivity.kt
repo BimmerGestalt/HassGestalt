@@ -66,8 +66,7 @@ class MainActivity : AppCompatActivity() {
 				println("States: ${states.await()}")
 				println("Panels: ${panels.await()}")
 				println("Cooper Panel: ${panelConfig.await()}")
-				val state = StateTracker(api)
-				state.subscribeAll(lifecycleScope)
+				val state = StateTracker(lifecycleScope, api)
 			}
 		}
 	}

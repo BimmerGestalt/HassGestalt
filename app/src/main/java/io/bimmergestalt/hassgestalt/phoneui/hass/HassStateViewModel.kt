@@ -8,8 +8,16 @@ import io.bimmergestalt.hassgestalt.hass.stateTracker
 import kotlinx.coroutines.flow.*
 
 class HassStateViewModel(testServerConfig: ServerConfig? = null): ViewModel() {
+	init {
+		println("HassStateViewModel is created")
+	}
 	val serverConfig = testServerConfig ?: ServerConfig()
 
 	val api = serverConfig.flow.hassApi().shareIn(viewModelScope, SharingStarted.WhileSubscribed(), replay = 1)
 	val state = api.stateTracker().shareIn(viewModelScope, SharingStarted.WhileSubscribed(), replay = 1)
+
+	override fun onCleared() {
+		super.onCleared()
+		println("HassStateViewModel is cleared")
+	}
 }
