@@ -13,19 +13,37 @@
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_marginBottom="16dp">
 
-        <EditText
-            android:id="@+id/txt_instance_url"
+        <LinearLayout
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@{viewModel.serverName}"
-            android:onTextChanged="@{(text, start, before, count) -> controller.setServerName(text)}"/>
-
+            android:layout_height="wrap_content">
+            <EditText
+                android:id="@+id/txt_instance_url"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@{viewModel.serverName}"
+                android:onTextChanged="@{(text, start, before, count) -> controller.setServerName(text)}">
+            </EditText>
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_baseline_check_24"
+                android:visibility="@{viewModel.isValid() == true}" />
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_baseline_close_24"
+                android:visibility="@{viewModel.isValid() == false}" />
+        </LinearLayout>
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:visibility="@{!viewModel.authenticated}"
+            android:visibility="@{!viewModel.authenticated &amp;&amp; viewModel.isValid()}"
             android:text="Login"
             android:onClick="@{() -> controller.startLogin()}"/>
         <Button

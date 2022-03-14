@@ -1,6 +1,5 @@
 package io.bimmergestalt.hassgestalt.hass
 
-import android.net.Uri
 import android.util.Log
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
@@ -13,22 +12,18 @@ import kotlinx.coroutines.runBlocking
 import net.openid.appauth.AuthState
 import org.json.JSONException
 import org.json.JSONObject
+import java.lang.Exception
 import java.net.URI
 
 class HassApi(val wsURI: URI, val authState: AuthState) {
 	companion object {
 		fun connect(httpUri: String, authState: AuthState): Deferred<HassApi?> {
-			val uri = Uri.parse(httpUri)
-			val uriBuilder = uri.buildUpon()
-			if (uri.scheme == "http") uriBuilder.scheme("ws") else uriBuilder.scheme("wss")
-			uriBuilder.encodedPath("/api/websocket")
-
-			val api = HassApi(URI.create(uriBuilder.build().toString()), authState)
+			val api = HassApi(HassWsClient.parseUri(httpUri), authState)
 			return api.connectAsync()
 		}
 	}
-	inner class Callback {
-		fun onMessage(message: JSONObject) {
+	inner class Callback: HassWsClient.Callback {
+		override fun onMessage(message: JSONObject) {
 			when(message.getString("type")) {
 				"auth_required" -> onAuthRequired()
 				"auth_ok" -> connecting.complete(this@HassApi)
@@ -36,6 +31,12 @@ class HassApi(val wsURI: URI, val authState: AuthState) {
 				"event" -> onEvent(message)
 				"result" -> onResult(message)
 			}
+		}
+
+		override fun onConnection(connected: Boolean) {
+		}
+
+		override fun onError(ex: Exception?) {
 		}
 	}
 	val client = HassWsClient(wsURI, this.Callback())

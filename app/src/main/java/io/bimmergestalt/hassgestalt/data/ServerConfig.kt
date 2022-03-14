@@ -16,7 +16,7 @@ class ServerConfig() {
 		private val serverNameLive: LiveData<String> = _serverNameLive
 
 		private var authState: AuthState? = null
-			set(value) {field=value; _authStateLive.value=value}
+			set(value) {field=value; _authStateLive.value=value; _flow.value = ServerConfig()}
 		private val _authStateLive = MutableLiveData<AuthState?>(authState)
 		private val authStateLive: LiveData<AuthState?> = _authStateLive
 
@@ -36,6 +36,7 @@ class ServerConfig() {
 
 	val flow = ServerConfig.flow
 
+	var isValidServerName = MutableLiveData<Boolean?>(null)
 	val isAuthorized
 		get() = authState?.isAuthorized == true
 

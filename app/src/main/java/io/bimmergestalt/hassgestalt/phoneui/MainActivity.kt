@@ -22,9 +22,11 @@ class MainActivity : AppCompatActivity() {
 		super.onCreate(savedInstanceState)
 		setContentView(R.layout.activity_main)
 
+		/*
 		findViewById<Button>(R.id.btn_click3).setOnClickListener {
 			tryWebsocket()
 		}
+		*/
 	}
 
 	fun tryApi() {

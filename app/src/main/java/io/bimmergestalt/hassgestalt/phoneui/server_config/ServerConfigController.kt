@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.lifecycle.LifecycleCoroutineScope
 import io.bimmergestalt.hassgestalt.OauthAccess
 import io.bimmergestalt.hassgestalt.data.ServerConfig
+import io.bimmergestalt.hassgestalt.hass.HassWsClient
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -15,14 +16,25 @@ class ServerConfigController(val lifecycleScope: LifecycleCoroutineScope, val se
 		pendingServerName = serverName.toString()
 		setServerNameJob?.cancel()
 		setServerNameJob = lifecycleScope.launch {
+			serverConfig.isValidServerName.value = null
+
 			// debounce, will get cancelled for new input
 			delay(1500)
 
 			val changed = serverConfig.serverName != pendingServerName
 			if (changed) {
+				println("Pending $pendingServerName is different than ${serverConfig.serverName}")
 				serverConfig.authState = null
 			}
-			serverConfig.serverName = pendingServerName ?: ""
+			var pendingServerName = pendingServerName ?: ""
+			if (pendingServerName.isNotBlank() && !pendingServerName.contains("://")) {
+				pendingServerName = "https://$pendingServerName"
+			}
+			serverConfig.serverName = pendingServerName
+
+			if (pendingServerName.isNotBlank()) {
+				serverConfig.isValidServerName.value = HassWsClient.testUri(HassWsClient.parseUri(pendingServerName))
+			}
 		}
 	}
 
