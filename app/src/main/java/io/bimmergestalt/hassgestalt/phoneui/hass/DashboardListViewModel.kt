@@ -18,15 +18,21 @@ class DashboardListViewModel(val hassApi: Flow<HassApi>, val stateTracker: Flow<
 		}
 	}
 
+	// needs to be before, because dashboardItems refers to it
+	val currentSelection: MutableLiveData<DashboardHeader?> = MutableLiveData<DashboardHeader?>(null)
+	val currentSelectionTitle = currentSelection.map {it?.title ?: ""}
+
 	val lovelaceConfig = hassApi.map { LovelaceConfig(it) }
-	val dashboardItems = lovelaceConfig.map { config -> config.getDashboardList() }
+	val dashboardItems = lovelaceConfig.map { config ->
+		config.getDashboardList().also {
+			val currentSelection = currentSelection.value
+			if (currentSelection != null && !it.contains(currentSelection)) {
+				this.currentSelection.postValue(null)
+			}
+		}}
 		.asObservableList(viewModelScope)
 	val dashboardItemsBinding = ItemBinding.of<DashboardHeader>(BR.dashboardHeader, R.layout.item_dashboard)
 		.bindExtra(BR.viewModel, this)
-
-	val currentSelection = MutableLiveData<DashboardHeader?>(null)
-	val currentSelectionTitle = currentSelection.map {it?.title ?: ""}
-
 	val dashboardConfig = lovelaceConfig.combine(currentSelection.asFlow()) { config, selected ->
 		if (selected != null) {
 			config.getDashboardConfig(selected.url_path)

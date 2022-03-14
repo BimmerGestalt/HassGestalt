@@ -4,24 +4,22 @@ import androidx.annotation.VisibleForTesting
 import io.bimmergestalt.hassgestalt.hass.EntityStateParser.mapEntityStateStream
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 
 class StateTracker(private val scope: CoroutineScope, private val api: HassApi) {
 	companion object {
-		fun <K, V> MutableMap<K, MutableSharedFlow<V>>.getFlow(key: K): MutableSharedFlow<V> {
+		fun <K> MutableMap<K, MutableStateFlow<EntityState>>.getFlow(key: K): MutableStateFlow<EntityState> {
 			return synchronized(this) {
-				this.getOrPut(key, { MutableSharedFlow(1, 0, BufferOverflow.DROP_OLDEST) })
+				this.getOrPut(key, { MutableStateFlow(EntityState.EMPTY) })
 			}
 		}
 	}
 
 	val lastState = HashMap<String, EntityState>()
-	val allEntityStates = HashMap<String, MutableSharedFlow<EntityState>>()
-	val singleEntityStates = HashMap<String, MutableSharedFlow<EntityState>>()
+	val allEntityStates = HashMap<String, MutableStateFlow<EntityState>>()
+	val singleEntityStates = HashMap<String, MutableStateFlow<EntityState>>()
 
 	private val dataNeeded = MutableSharedFlow<String>(extraBufferCapacity = 1)
 	private val dataNeededJob: Job
@@ -55,7 +53,7 @@ class StateTracker(private val scope: CoroutineScope, private val api: HassApi) 
 				processState(it)
 				allEntityStates.getFlow(it.entityId).emit(it)
 			}
-			.onCompletion { allEntityStates.forEach { it.value.resetReplayCache() } }
+			.onCompletion { allEntityStates.forEach { it.value.value = EntityState.EMPTY } }
 			.launchIn(scope)
 	}
 
@@ -85,7 +83,7 @@ class StateTracker(private val scope: CoroutineScope, private val api: HassApi) 
 						}
 					} else {
 						println("Single subscription for $entityId has no subscribers")
-						singleEntityStates.getFlow(entityId).resetReplayCache()
+						singleEntityStates.getFlow(entityId).value  = EntityState.EMPTY
 						singleEventSubscriber[entityId]?.cancel()
 					}
 				}

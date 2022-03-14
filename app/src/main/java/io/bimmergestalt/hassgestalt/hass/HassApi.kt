@@ -7,18 +7,61 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.runBlocking
 import net.openid.appauth.AuthState
+import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import java.lang.Exception
 import java.net.URI
 
-class HassApi(val wsURI: URI, val authState: AuthState) {
+interface HassApi {
+	fun subscribe(subscription: JSONObject): Flow<JSONObject>
+	fun request(request: JSONObject): Deferred<JSONObject>
+}
+
+class HassApiDisconnected(): HassApi {
+	override fun subscribe(subscription: JSONObject): Flow<JSONObject> {
+		return flowOf()
+	}
+
+	override fun request(request: JSONObject): Deferred<JSONObject> {
+		val id = request.optInt("id")
+		val response = JSONObject().apply {
+			put("id", id)
+			put("type", "result")
+			put("success", true)
+		}
+		val type = request.optString("type")
+		when(type) {
+			"get_states" -> response.apply {
+				put("result", JSONArray())
+			}
+			"get_panels" -> response.apply {
+				put("result", JSONArray())
+			}
+			"lovelace/config" -> response.apply {
+				put("result", JSONObject())
+			}
+			else -> response.apply {
+				put("success", false)
+				Log.w(TAG, "HassApiDisconnected didn't have an answer for $type request")
+				put("error", JSONObject().apply {
+					put("code", "unknown_request")
+					put("message", "Unknown request")
+				})
+			}
+		}
+		return CompletableDeferred(response)
+	}
+}
+
+class HassApiConnection(val wsURI: URI, private val authState: AuthState): HassApi {
 	companion object {
-		fun connect(httpUri: String, authState: AuthState): Deferred<HassApi?> {
-			val api = HassApi(HassWsClient.parseUri(httpUri), authState)
+		fun connect(httpUri: String, authState: AuthState): Deferred<HassApiConnection?> {
+			val api = HassApiConnection(HassWsClient.parseUri(httpUri), authState)
 			return api.connectAsync()
 		}
 	}
@@ -26,7 +69,7 @@ class HassApi(val wsURI: URI, val authState: AuthState) {
 		override fun onMessage(message: JSONObject) {
 			when(message.getString("type")) {
 				"auth_required" -> onAuthRequired()
-				"auth_ok" -> connecting.complete(this@HassApi)
+				"auth_ok" -> connecting.complete(this@HassApiConnection)
 				"auth_invalid" -> connecting.complete(null)
 				"event" -> onEvent(message)
 				"result" -> onResult(message)
@@ -40,7 +83,7 @@ class HassApi(val wsURI: URI, val authState: AuthState) {
 		}
 	}
 	val client = HassWsClient(wsURI, this.Callback())
-	private var connecting: CompletableDeferred<HassApi?> = CompletableDeferred()
+	private var connecting: CompletableDeferred<HassApiConnection?> = CompletableDeferred()
 	val isConnected: Boolean
 		get() = client.connected
 
@@ -48,7 +91,7 @@ class HassApi(val wsURI: URI, val authState: AuthState) {
 	val subscriptions = HashMap<Int, MutableSharedFlow<JSONObject>>()
 	val pendingCommands = HashMap<Int, CompletableDeferred<JSONObject>>()
 
-	fun connectAsync(): Deferred<HassApi?> {
+	fun connectAsync(): Deferred<HassApiConnection?> {
 		if (!isConnected) {
 			this.connecting = CompletableDeferred()
 			client.connect()
@@ -68,7 +111,7 @@ class HassApi(val wsURI: URI, val authState: AuthState) {
 		client.close()
 	}
 
-	fun subscribe(subscription: JSONObject): Flow<JSONObject> {
+	override fun subscribe(subscription: JSONObject): Flow<JSONObject> {
 		if (!isConnected) return MutableSharedFlow()
 		return synchronized(this) {
 			val subscriptionId = id
@@ -119,7 +162,7 @@ class HassApi(val wsURI: URI, val authState: AuthState) {
 		}
 	}
 
-	fun request(request: JSONObject): Deferred<JSONObject> {
+	override fun request(request: JSONObject): Deferred<JSONObject> {
 		if (!isConnected) return CompletableDeferred()
 		val deferred = synchronized(this) {
 			val deferred = CompletableDeferred<JSONObject>()

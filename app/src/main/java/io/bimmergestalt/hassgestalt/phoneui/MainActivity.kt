@@ -3,12 +3,12 @@ package io.bimmergestalt.hassgestalt.phoneui
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.Button
 import androidx.lifecycle.lifecycleScope
 import io.bimmergestalt.hassgestalt.R
 import io.bimmergestalt.hassgestalt.hass.StateTracker
 import io.bimmergestalt.hassgestalt.hass.HassApi
 import io.bimmergestalt.hassgestalt.data.ServerConfig
+import io.bimmergestalt.hassgestalt.hass.HassApiConnection
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.io.InputStream
@@ -53,7 +53,7 @@ class MainActivity : AppCompatActivity() {
 
 	fun tryWebsocket() {
 		lifecycleScope.launch {
-			val api = HassApi.connect(serverConfig.serverName, serverConfig.authState!!).await()
+			val api = HassApiConnection.connect(serverConfig.serverName, serverConfig.authState!!).await()
 			if (api != null) {
 				val states = api.request(JSONObject().apply {
 					put("type", "get_states")

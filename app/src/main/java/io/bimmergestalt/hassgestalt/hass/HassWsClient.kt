@@ -9,7 +9,6 @@ import org.java_websocket.exceptions.WebsocketNotConnectedException
 import org.java_websocket.handshake.ServerHandshake
 import org.json.JSONException
 import org.json.JSONObject
-import java.lang.Exception
 import java.net.URI
 
 val TAG = "HassWs"

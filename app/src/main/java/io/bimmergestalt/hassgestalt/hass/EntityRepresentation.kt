@@ -3,17 +3,14 @@ package io.bimmergestalt.hassgestalt.hass
 import android.content.Context
 import android.graphics.Paint
 import android.graphics.drawable.Drawable
-import android.util.Log
 import com.mikepenz.iconics.IconicsColor
 import com.mikepenz.iconics.IconicsDrawable
-import com.mikepenz.iconics.typeface.library.community.material.CommunityMaterial
 import com.mikepenz.iconics.utils.color
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
-import java.lang.IllegalArgumentException
 
 data class EntityRepresentation(val iconName: String, val icon: (Context.() -> Drawable)?,
                                 val entityId: String, val name: String, val state: String,

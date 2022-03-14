@@ -10,13 +10,14 @@ fun Flow<ServerConfig>.hassApi(): Flow<HassApi> = flatMapLatest { serverConfig -
 	callbackFlow<HassApi> {
 		val authState = serverConfig.authState
 		val api = if (authState != null) {
-			HassApi.connect(serverConfig.serverName, authState).await()?.also {
-				send(it)
-			}
-		} else { null }
+			HassApiConnection.connect(serverConfig.serverName, authState).await()
+		} else { null } ?: HassApiDisconnected()
+		send(api)
 
 		awaitClose {
-			api?.disconnect()
+			if (api is HassApiConnection) {
+				api.disconnect()
+			}
 		}
 	}
 }

@@ -67,6 +67,12 @@ object JsonHelpers {
 		return result
 	}
 
+	fun JSONObject.update(added: JSONObject) {
+		added.keys().forEach {
+			this.put(it, added.get(it))
+		}
+	}
+
 	@Throws(JSONException::class)
 	private fun fromJson(json: Any): Any? {
 		return when {
