@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import org.json.JSONObject
 import java.util.ArrayList
 
-class DashboardHeader(val title: String, val url_path: String, icon: String, val iconDrawable: (Context.() -> Drawable?)?)
+data class DashboardHeader(val starred: Boolean, val title: String, val url_path: String, val icon: String, val iconDrawable: (Context.() -> Drawable?)?)
 
 class LovelaceDashboard(val cards: List<LovelaceCard>) {
 	companion object {

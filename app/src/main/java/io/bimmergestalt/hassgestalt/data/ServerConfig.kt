@@ -17,6 +17,8 @@ class ServerConfig() {
 
 		private val _flow = MutableStateFlow(ServerConfig())
 		private val flow: StateFlow<ServerConfig> = _flow
+
+		private val starredDashboards = MutableStateFlow(emptyList<String>())
 	}
 
 	var serverName: String
@@ -28,6 +30,7 @@ class ServerConfig() {
 		set(value) { ServerConfig.authState = value }
 
 	val flow = ServerConfig.flow
+	val starredDashboards = ServerConfig.starredDashboards
 
 	var isValidServerName = MutableLiveData<Boolean?>(null)
 	val isAuthorized

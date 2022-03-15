@@ -21,6 +21,7 @@
         android:layout_height="wrap_content"
         android:text="Try Api" />
     -->
+    <!--
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/paneEntityState"
         android:layout_width="match_parent"
@@ -33,6 +34,7 @@
         android:layout_height="wrap_content"
         app:hass_entity_id = "sensor.zwave_11_w"
         android:name="io.bimmergestalt.hassgestalt.phoneui.hass.EntityStateFragment" />
+    -->
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/paneDashboardList"
         android:layout_width="match_parent"

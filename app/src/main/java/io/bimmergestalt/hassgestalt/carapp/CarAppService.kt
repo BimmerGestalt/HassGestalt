@@ -102,7 +102,7 @@ class CarAppService: LifecycleService() {
 					securityAccess,
 					CarAppAssetResources(applicationContext, "smartthings"),
 					iconRenderer,
-					lovelace,
+					lovelace, serverConfig.starredDashboards
 				)
 			}
 			thread?.start()

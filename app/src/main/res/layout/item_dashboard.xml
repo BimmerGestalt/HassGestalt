@@ -17,8 +17,22 @@
         android:gravity="center_vertical"
         android:onClick="@{() -> viewModel.setCurrentSelection(dashboardHeader)}">
         <ImageView
-            android:layout_width="16dp"
-            android:layout_height="16dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:padding="12dp"
+            android:src="@drawable/ic_baseline_star_outline_24"
+            android:visibility="@{!dashboardHeader.starred}"
+            android:onClick="@{() -> viewModel.toggleDashboardStar(dashboardHeader.url_path)}"/>
+        <ImageView
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:padding="12dp"
+            android:src="@drawable/ic_baseline_star_24"
+            android:visibility="@{dashboardHeader.starred}"
+            android:onClick="@{() -> viewModel.toggleDashboardStar(dashboardHeader.url_path)}"/>
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
             android:src="@{dashboardHeader.iconDrawable}"
             tools:ignore="ContentDescription" />
         <TextView

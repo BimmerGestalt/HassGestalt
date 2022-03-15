@@ -21,7 +21,7 @@ const val TAG = "HassGestalt"
 
 class CarApp(val iDriveConnectionStatus: IDriveConnectionStatus, securityAccess: SecurityAccess,
              val carAppResources: CarAppResources, val iconRenderer: IconRenderer,
-             val lovelace: Flow<Lovelace>
+             val lovelace: Flow<Lovelace>, val starredDashboards: Flow<List<String>>
 ) {
 
     val displayedEntities = listOf("sensor.chillcat_inverter_energy", "sensor.zwave_11_w")
@@ -40,7 +40,7 @@ class CarApp(val iDriveConnectionStatus: IDriveConnectionStatus, securityAccess:
         carConnection.sas_login(sas_response)
 
         carApp = createRhmiApp()
-        homeView = HomeView(carApp.states.values.first {HomeView.fits(it)}, iconRenderer, lovelace, displayedEntities)
+        homeView = HomeView(carApp.states.values.first {HomeView.fits(it)}, iconRenderer, lovelace, starredDashboards)
         dashboardView = DashboardView(carApp.states.values.first {it != homeView.state && DashboardView.fits(it)}, iconRenderer, lovelace)
 
 

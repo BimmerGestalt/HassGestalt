@@ -10,7 +10,7 @@ import io.bimmergestalt.idriveconnectkit.rhmi.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
-class HomeView(val state: RHMIState, val iconRenderer: IconRenderer, val lovelace: Flow<Lovelace>, val displayedEntities: List<String>) {
+class HomeView(val state: RHMIState, val iconRenderer: IconRenderer, val lovelace: Flow<Lovelace>, val starredDashboardNames: Flow<List<String>>) {
 	companion object {
 		fun fits(state: RHMIState): Boolean {
 			return state is RHMIState.PlainState &&
@@ -20,7 +20,12 @@ class HomeView(val state: RHMIState, val iconRenderer: IconRenderer, val lovelac
 
 	private val coroutineScope = CoroutineScope(Job() + Dispatchers.IO)
 
-	private val list = state.componentsList.filterIsInstance<RHMIComponent.List>().first()
+	private val headings = state.componentsList.filterIsInstance<RHMIComponent.Label>().takeLast(5).take(4)
+	private val lists = state.componentsList.filterIsInstance<RHMIComponent.List>().takeLast(5).take(4)
+	private val dashboardListComponents = lists.map {
+		DashboardListComponent(coroutineScope, it, iconRenderer)
+	}
+
 	private val dashboardLabel = state.componentsList.filterIsInstance<RHMIComponent.Label>().last()
 	private val dashboardList = state.componentsList.filterIsInstance<RHMIComponent.List>().last()
 
@@ -36,8 +41,6 @@ class HomeView(val state: RHMIState, val iconRenderer: IconRenderer, val lovelac
 				coroutineScope.coroutineContext.cancelChildren()
 			}
 		}
-		list.setVisible(true)
-		list.setProperty(RHMIProperty.PropertyId.LIST_COLUMNWIDTH, "50,*,150")
 
 		dashboardLabel.setVisible(true)
 		dashboardLabel.getModel()?.asRaDataModel()?.value = L.DASHBOARD_LIST
@@ -52,22 +55,32 @@ class HomeView(val state: RHMIState, val iconRenderer: IconRenderer, val lovelac
 
 	private suspend fun onShow() {
 		coroutineScope.launch {
-			lovelace.collectLatest { dashboardRenderer ->
-				dashboardRenderer.renderEntities(displayedEntities)
-				.rhmiDataTableFlow { item ->
-					arrayOf(
-						item.icon?.let {iconRenderer.render(it, 46, 46)}
-							?.let {iconRenderer.compress(it, 100)} ?: "",
-						item.name,
-						item.state
-					)
-				}
-				.batchDataTables()
-				.collect {
-					list.app.setModel(list.model, it)
-				}
+			val allDashboards = lovelace.map {
+				it.getDashboardList()
 			}
+			val starredDashboards = allDashboards.combine(starredDashboardNames) { dashboards, starredNames ->
+				val starredNamesSet = starredNames.toSet()
+				dashboards.map {
+					it.copy(starred = starredNamesSet.contains(it.url_path))
+				}.filter {it.starred}.take(headings.size)
+			}
+
+			lovelace.combine(starredDashboards) { dashboardRenderer, dashboards ->
+				dashboards.forEachIndexed { index, dashboard ->
+					headings[index].getModel()?.asRaDataModel()?.value =
+						dashboard.title
+					headings[index].setVisible(true)
+
+					val entities = dashboardRenderer.renderDashboard(dashboard.url_path)
+					dashboardListComponents[index].show(entities)
+				}
+				(dashboards.size until headings.size).forEach { index ->
+					headings[index].setVisible(false)
+					dashboardListComponents[index].hide()
+				}
+			}.collect()
 		}
+
 		coroutineScope.launch {
 			lovelace.collectLatest { dashboardRenderer ->
 				dashboards = dashboardRenderer.getDashboardList()

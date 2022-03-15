@@ -31,7 +31,7 @@ class Lovelace(val api: HassApi, val state: StateTracker) {
 						}
 					}
 				} else { null }
-				DashboardHeader(it.optString("title"), it.optString("url_path"),
+				DashboardHeader(false, it.optString("title"), it.optString("url_path"),
 					icon, iconDrawable)
 			}
 			.toList()

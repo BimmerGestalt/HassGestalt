@@ -11,19 +11,20 @@ import java.lang.IllegalArgumentException
 import kotlin.math.max
 import kotlin.math.min
 
-fun <T> List<Flow<T>>.rhmiDataTableFlow(rowMap: (T) -> Array<Any>): Flow<BMWRemoting.RHMIDataTable> {
-	return flowOf(this).rhmiDataTableFlow(rowMap)
-}
 fun <T> Flow<List<Flow<T>>>.rhmiDataTableFlow(rowMap: (T) -> Array<Any>): Flow<BMWRemoting.RHMIDataTable> {
 	return this.flatMapLatest { tableRows ->
-		val rowCount = tableRows.count()
-		tableRows.mapIndexed { rowIndex, rowFlow: Flow<T> ->
-			rowFlow.map { row ->
-				val output = rowMap(row)
-				BMWRemoting.RHMIDataTable(arrayOf(output), false, rowIndex, 1, rowCount, 0, output.size, output.size)
-			}
-		}.merge()
+		tableRows.rhmiDataTableFlow(rowMap)
 	}
+}
+fun <T> List<Flow<T>>.rhmiDataTableFlow(rowMap: (T) -> Array<Any>): Flow<BMWRemoting.RHMIDataTable> {
+	val tableRows = this
+	val rowCount = tableRows.count()
+	return tableRows.mapIndexed { rowIndex, rowFlow: Flow<T> ->
+		rowFlow.map { row ->
+			val output = rowMap(row)
+			BMWRemoting.RHMIDataTable(arrayOf(output), false, rowIndex, 1, rowCount, 0, output.size, output.size)
+		}
+	}.merge()
 }
 
 val BMWRemoting.RHMIDataTable.lastRow: Int

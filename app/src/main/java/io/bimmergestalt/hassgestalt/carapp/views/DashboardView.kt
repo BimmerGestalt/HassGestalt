@@ -1,10 +1,7 @@
 package io.bimmergestalt.hassgestalt.carapp.views
 
-import android.util.SparseArray
 import io.bimmergestalt.hassgestalt.L
 import io.bimmergestalt.hassgestalt.carapp.IconRenderer
-import io.bimmergestalt.hassgestalt.carapp.batchDataTables
-import io.bimmergestalt.hassgestalt.carapp.rhmiDataTableFlow
 import io.bimmergestalt.hassgestalt.hass.*
 import io.bimmergestalt.idriveconnectkit.rhmi.*
 import kotlinx.coroutines.*
@@ -23,7 +20,7 @@ class DashboardView(val state: RHMIState, val iconRenderer: IconRenderer,
 
 	var currentDashboard: DashboardHeader? = null
 	val listComponent = state.componentsList.filterIsInstance<RHMIComponent.List>().first()
-	val listElements = SparseArray<EntityRepresentation>()
+	val dashboardListComponent = DashboardListComponent(coroutineScope, listComponent, iconRenderer)
 
 	fun initWidgets() {
 		state.getTextModel()?.asRaDataModel()?.value = L.APP_NAME
@@ -33,13 +30,8 @@ class DashboardView(val state: RHMIState, val iconRenderer: IconRenderer,
 				coroutineScope.launch { onShow() }
 			} else {
 				coroutineScope.coroutineContext.cancelChildren()
+				dashboardListComponent.hide()
 			}
-		}
-
-		listComponent.setVisible(true)
-		listComponent.setProperty(RHMIProperty.PropertyId.LIST_COLUMNWIDTH, "50,*,150")
-		listComponent.getAction()?.asRAAction()?.rhmiActionCallback = RHMIActionListCallback {
-			listElements[it]?.tryClick()
 		}
 	}
 
@@ -52,21 +44,8 @@ class DashboardView(val state: RHMIState, val iconRenderer: IconRenderer,
 				dashboardRenderer.renderDashboard(currentDashboard.url_path)
 			} else { emptyList() }
 		}
-		dashboardEntries.map { list ->
-			// memoize the EntityControllers for handling the row click handler
-			listElements.clear()
-			list.mapIndexed { index, flow ->
-				flow.map { entity ->
-					entity.also { listElements.put(index, it) }
-				}
-			}
-		}.rhmiDataTableFlow { item -> arrayOf(
-			item.icon?.let {iconRenderer.render(it, 46, 46)}
-				?.let {iconRenderer.compress(it, 100)} ?: "",
-			item.name,
-			item.state
-		)}.batchDataTables().collect {
-			listComponent.app.setModel(listComponent.model, it)
+		dashboardEntries.collectLatest {
+			dashboardListComponent.show(it)
 		}
 	}
 }
