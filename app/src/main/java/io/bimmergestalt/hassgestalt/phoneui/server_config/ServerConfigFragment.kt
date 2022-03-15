@@ -17,11 +17,12 @@ class ServerConfigFragment: Fragment() {
 		// trigger the LiveData to update with the authState, even if it's the same
 		viewModel.serverConfig.authState = it
 	} }
-	val serverConfigPersistence by lazy { ServerConfigPersistence(requireContext(), viewLifecycleOwner) }
+	val serverConfigPersistence by lazy { ServerConfigPersistence(requireContext(), lifecycleScope) }
 	val controller by lazy {ServerConfigController(lifecycleScope, viewModel.serverConfig, oauthAccess)}
 
 	override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
 		serverConfigPersistence.load()
+		serverConfigPersistence.startSaving()
 		viewModel.authenticated.observe(viewLifecycleOwner) {
 			oauthAccess.tryRefreshToken()
 		}

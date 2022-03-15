@@ -17,6 +17,7 @@ import io.bimmergestalt.idriveconnectkit.android.IDriveConnectionReceiver
 import io.bimmergestalt.idriveconnectkit.android.IDriveConnectionStatus
 import io.bimmergestalt.idriveconnectkit.android.security.SecurityAccess
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 
 class CarAppService: LifecycleService() {
 
@@ -28,15 +29,18 @@ class CarAppService: LifecycleService() {
 		// trigger the LiveData to update with the authState, even if it's the same
 		serverConfig.authState = it
 	} }
-	val serverConfigPersistence by lazy { ServerConfigPersistence(this, this) }
+	val serverConfigPersistence by lazy { ServerConfigPersistence(this, lifecycleScope) }
 
 	override fun onCreate() {
 		super.onCreate()
 		SecurityAccess.getInstance(applicationContext).connect()
 
 		serverConfigPersistence.load()
-		serverConfig.authStateLive.observe(this) {
-			oauthAccess.tryRefreshToken()
+		serverConfigPersistence.startSaving()
+		lifecycleScope.launch {
+			serverConfig.flow.collect {
+				oauthAccess.tryRefreshToken()
+			}
 		}
 	}
 
