@@ -7,9 +7,11 @@ import android.graphics.drawable.Drawable
 import com.mikepenz.iconics.IconicsColor
 import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.utils.color
+import io.bimmergestalt.hassgestalt.hass.EntityRepresentation.Companion.gainControl
+import kotlinx.coroutines.flow.Flow
 import org.json.JSONObject
 
-class LovelaceConfig(val api: HassApi) {
+class Lovelace(val api: HassApi, val state: StateTracker) {
 	suspend fun getDashboardList(): List<DashboardHeader> {
 		val panelConfig = api.request(JSONObject().apply {
 			put("type", "get_panels")
@@ -42,5 +44,16 @@ class LovelaceConfig(val api: HassApi) {
 		}).await()
 		val result = panelConfig.optJSONObject("result") ?: return LovelaceDashboard(emptyList())
 		return LovelaceDashboard.parse(result)
+	}
+
+	fun renderEntities(entities: List<String>): List<Flow<EntityRepresentation>> {
+		return entities.map { name ->
+			state[name].gainControl(api)
+		}
+	}
+
+	suspend fun renderDashboard(urlPath: String): List<Flow<EntityRepresentation>> {
+		val dashboard = getDashboardConfig(urlPath)
+		return dashboard.flatten(api, state)
 	}
 }

@@ -5,13 +5,12 @@ import io.bimmergestalt.hassgestalt.carapp.IconRenderer
 import io.bimmergestalt.hassgestalt.carapp.batchDataTables
 import io.bimmergestalt.hassgestalt.carapp.rhmiDataTableFlow
 import io.bimmergestalt.hassgestalt.hass.DashboardHeader
-import io.bimmergestalt.hassgestalt.hass.LovelaceConfig
-import io.bimmergestalt.hassgestalt.hass.StateTracker
+import io.bimmergestalt.hassgestalt.hass.Lovelace
 import io.bimmergestalt.idriveconnectkit.rhmi.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
-class HomeView(val state: RHMIState, val iconRenderer: IconRenderer, val hassState: Flow<StateTracker>, val lovelaceConfig: Flow<LovelaceConfig>, val displayedEntities: List<String>) {
+class HomeView(val state: RHMIState, val iconRenderer: IconRenderer, val lovelace: Flow<Lovelace>, val displayedEntities: List<String>) {
 	companion object {
 		fun fits(state: RHMIState): Boolean {
 			return state is RHMIState.PlainState &&
@@ -38,7 +37,7 @@ class HomeView(val state: RHMIState, val iconRenderer: IconRenderer, val hassSta
 			}
 		}
 		list.setVisible(true)
-		list.setProperty(RHMIProperty.PropertyId.LIST_COLUMNWIDTH, "*,150")
+		list.setProperty(RHMIProperty.PropertyId.LIST_COLUMNWIDTH, "50,*,150")
 
 		dashboardLabel.setVisible(true)
 		dashboardLabel.getModel()?.asRaDataModel()?.value = L.DASHBOARD_LIST
@@ -53,24 +52,25 @@ class HomeView(val state: RHMIState, val iconRenderer: IconRenderer, val hassSta
 
 	private suspend fun onShow() {
 		coroutineScope.launch {
-			hassState.collectLatest { states: StateTracker ->
-				displayedEntities
-					.map { id: String -> states[id] }
-					.rhmiDataTableFlow { item ->
-						arrayOf(
-							item.attributes["friendly_name"] as? String ?: item.entityId,
-							item.state + (item.attributes["unit_of_measurement"] as? String ?: "")
-						)
-					}
-					.batchDataTables()
-					.collect {
-						list.app.setModel(list.model, it)
-					}
+			lovelace.collectLatest { dashboardRenderer ->
+				dashboardRenderer.renderEntities(displayedEntities)
+				.rhmiDataTableFlow { item ->
+					arrayOf(
+						item.icon?.let {iconRenderer.render(it, 46, 46)}
+							?.let {iconRenderer.compress(it, 100)} ?: "",
+						item.name,
+						item.state
+					)
+				}
+				.batchDataTables()
+				.collect {
+					list.app.setModel(list.model, it)
+				}
 			}
 		}
 		coroutineScope.launch {
-			lovelaceConfig.collectLatest { lovelaceConfig ->
-				dashboards = lovelaceConfig.getDashboardList()
+			lovelace.collectLatest { dashboardRenderer ->
+				dashboards = dashboardRenderer.getDashboardList()
 				dashboardList.getModel()?.value = object : RHMIModel.RaListModel.RHMIListAdapter<DashboardHeader>(2, dashboards) {
 					override fun convertRow(index: Int, item: DashboardHeader): Array<Any> =
 						arrayOf(

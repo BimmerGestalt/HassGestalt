@@ -9,7 +9,7 @@ import io.bimmergestalt.hassgestalt.L
 import io.bimmergestalt.hassgestalt.OauthAccess
 import io.bimmergestalt.hassgestalt.data.ServerConfig
 import io.bimmergestalt.hassgestalt.data.ServerConfigPersistence
-import io.bimmergestalt.hassgestalt.hass.LovelaceConfig
+import io.bimmergestalt.hassgestalt.hass.Lovelace
 import io.bimmergestalt.hassgestalt.hass.hassApi
 import io.bimmergestalt.hassgestalt.hass.stateTracker
 import io.bimmergestalt.idriveconnectkit.android.CarAppAssetResources
@@ -92,17 +92,17 @@ class CarAppService: LifecycleService() {
 				val iconRenderer = IconRenderer(this)
 				val hassApi = serverConfig.flow.hassApi()
 					.shareIn(this.lifecycleScope, SharingStarted.WhileSubscribed(stopTimeoutMillis = 20000), 1)
-				val state = hassApi.stateTracker()
+				val stateTracker = hassApi.stateTracker()
 					.shareIn(this.lifecycleScope, SharingStarted.WhileSubscribed(stopTimeoutMillis = 20000), 1)
-				val lovelaceConfig = hassApi.map {
-					LovelaceConfig(it)
+				val lovelace = hassApi.combine(stateTracker) { api, state ->
+					Lovelace(api, state)
 				}
 				app = CarApp(
 					iDriveConnectionStatus,
 					securityAccess,
 					CarAppAssetResources(applicationContext, "smartthings"),
 					iconRenderer,
-					hassApi, state, lovelaceConfig,
+					lovelace,
 				)
 			}
 			thread?.start()

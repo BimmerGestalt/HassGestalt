@@ -11,7 +11,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
 class DashboardView(val state: RHMIState, val iconRenderer: IconRenderer,
-                    val hassApi: Flow<HassApi>, val hassState: Flow<StateTracker>, val lovelaceConfig: Flow<LovelaceConfig>) {
+                    val lovelace: Flow<Lovelace>) {
 	companion object {
 		fun fits(state: RHMIState): Boolean {
 			return state is RHMIState.PlainState &&
@@ -46,15 +46,13 @@ class DashboardView(val state: RHMIState, val iconRenderer: IconRenderer,
 	private suspend fun onShow() {
 		state.getTextModel()?.asRaDataModel()?.value = currentDashboard?.title ?: "[Unknown]"
 
-		val dashboardConfig = lovelaceConfig.map { config ->
+		val dashboardEntries = lovelace.map { dashboardRenderer ->
 			val currentDashboard = currentDashboard
 			if (currentDashboard != null) {
-				config.getDashboardConfig(currentDashboard.url_path)
-			} else { LovelaceDashboard(emptyList()) }
+				dashboardRenderer.renderDashboard(currentDashboard.url_path)
+			} else { emptyList() }
 		}
-		combine(hassApi, hassState, dashboardConfig) { hassApi, hassState, dashboard ->
-			dashboard.flatten(hassApi, hassState)
-		}.map { list ->
+		dashboardEntries.map { list ->
 			// memoize the EntityControllers for handling the row click handler
 			listElements.clear()
 			list.mapIndexed { index, flow ->
