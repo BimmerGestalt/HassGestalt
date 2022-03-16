@@ -9,10 +9,16 @@
     android:padding="8dp"
     tools:context=".phoneui.MainActivity">
 
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="4dp"
+        android:text="@string/app_description" />
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/paneServerSettings"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:paddingBottom="4dp"
         android:name="io.bimmergestalt.hassgestalt.phoneui.server_config.ServerConfigFragment" />
     <!--
     <Button
@@ -35,11 +41,20 @@
         app:hass_entity_id = "sensor.zwave_11_w"
         android:name="io.bimmergestalt.hassgestalt.phoneui.hass.EntityStateFragment" />
     -->
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="4dp"
+        android:text="@string/lbl_starred_dashboards" />
+
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/paneDashboardList"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:paddingBottom="4dp"
         android:name="io.bimmergestalt.hassgestalt.phoneui.hass.DashboardListFragment" />
+
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/paneDashboardView"
         android:layout_width="match_parent"
