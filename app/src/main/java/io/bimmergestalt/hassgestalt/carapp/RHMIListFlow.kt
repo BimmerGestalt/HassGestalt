@@ -98,7 +98,7 @@ class RHMIDataTableNeighbors() {
 }
 
 // Based on debounce/sample
-fun Flow<BMWRemoting.RHMIDataTable>.batchDataTables(debounceMs: Int = 250): Flow<BMWRemoting.RHMIDataTable> = flow {
+fun Flow<BMWRemoting.RHMIDataTable>.batchDataTables(debounceMs: Long = 100L): Flow<BMWRemoting.RHMIDataTable> = flow {
 	val downstream = this
 	coroutineScope {
 		// a channel of upstream values to select on
@@ -114,7 +114,7 @@ fun Flow<BMWRemoting.RHMIDataTable>.batchDataTables(debounceMs: Int = 250): Flow
 				// if we have a value, configure select to timeout and forward the value
 				if (pending != null) {
 					val elapsedTime = System.currentTimeMillis() - startTime
-					onTimeout(debounceMs.toLong() - elapsedTime) {
+					onTimeout(debounceMs - elapsedTime) {
 						val result = pending
 						pending = null
 						result?.let { neighbors ->

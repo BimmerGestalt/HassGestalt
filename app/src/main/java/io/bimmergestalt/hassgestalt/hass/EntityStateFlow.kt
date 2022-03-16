@@ -1,5 +1,6 @@
 package io.bimmergestalt.hassgestalt.hass
 
+import io.bimmergestalt.hassgestalt.hass.StateTracker.Companion.DEFAULT_EXPIRATION
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.BufferOverflow
@@ -8,9 +9,9 @@ import kotlinx.coroutines.channels.ClosedSendChannelException
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 
-fun Flow<HassApi>.stateTracker(): Flow<StateTracker> = flatMapLatest { hassApi ->
+fun Flow<HassApi>.stateTracker(timeout: Long = DEFAULT_EXPIRATION): Flow<StateTracker> = flatMapLatest { hassApi ->
 	callbackFlow {
-		val stateTracker = StateTracker(this, hassApi)
+		val stateTracker = StateTracker(this, hassApi, timeout)
 		send(stateTracker)
 		awaitClose {
 			println("HassApi connection is out of scope, disconnecting")

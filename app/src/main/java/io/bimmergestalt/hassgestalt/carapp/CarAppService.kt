@@ -92,7 +92,7 @@ class CarAppService: LifecycleService() {
 				val iconRenderer = IconRenderer(this)
 				val hassApi = serverConfig.flow.hassApi()
 					.shareIn(this.lifecycleScope, SharingStarted.WhileSubscribed(stopTimeoutMillis = 20000), 1)
-				val stateTracker = hassApi.stateTracker()
+				val stateTracker = hassApi.stateTracker(30000)
 					.shareIn(this.lifecycleScope, SharingStarted.WhileSubscribed(stopTimeoutMillis = 20000), 1)
 				val lovelace = hassApi.combine(stateTracker) { api, state ->
 					Lovelace(api, state)

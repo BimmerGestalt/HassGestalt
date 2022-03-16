@@ -4,12 +4,14 @@ import androidx.annotation.VisibleForTesting
 import io.bimmergestalt.hassgestalt.hass.EntityStateParser.mapEntityStateStream
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 
-class StateTracker(private val scope: CoroutineScope, private val api: HassApi) {
+class StateTracker(private val scope: CoroutineScope, private val api: HassApi, private val timeout: Long = DEFAULT_EXPIRATION) {
 	companion object {
+		const val DEFAULT_EXPIRATION = 5000L
 		fun <K> MutableMap<K, MutableStateFlow<EntityState>>.getFlow(key: K): MutableStateFlow<EntityState> {
 			return synchronized(this) {
 				this.getOrPut(key, { MutableStateFlow(EntityState.EMPTY) })
@@ -25,13 +27,14 @@ class StateTracker(private val scope: CoroutineScope, private val api: HassApi) 
 	private val dataNeededJob: Job
 	private val isAllSubscribed = MutableStateFlow(false)
 	private var allEventProcessor: Job? = null
-	private var singleEventProcessor = HashMap<String, Job>()
-	private var singleEventSubscriber = HashMap<String, Job>()
+	private val singleEventProcessor = HashMap<String, Job>()
+	private val singleEventSubscriber = HashMap<String, Job>()
+	private val singleEventUnsubscriber = HashMap<String, Job>()
 
 	init {
 		dataNeededJob = dataNeeded
 			.onEach { println("Needing initial data for $it") }
-			.debounce(100)
+			.debounce(50)
 			.onEach { println("Firing fetchStates") }
 			.onEach { fetchStates() }
 			.launchIn(scope)
@@ -64,6 +67,7 @@ class StateTracker(private val scope: CoroutineScope, private val api: HassApi) 
 				.map { it != 0 }     // isActive
 				.distinctUntilChanged()
 				.collect { isActive ->
+					singleEventUnsubscriber[entityId]?.cancel()
 					if (isActive) {
 						println("Starting single subscription for $entityId for new subscriber")
 						dataNeeded.emit(entityId)
@@ -83,13 +87,15 @@ class StateTracker(private val scope: CoroutineScope, private val api: HassApi) 
 						}
 					} else {
 						println("Single subscription for $entityId has no subscribers")
-						singleEntityStates.getFlow(entityId).value  = EntityState.EMPTY
-						singleEventSubscriber[entityId]?.cancel()
+						singleEventUnsubscriber[entityId] = launch {
+							// schedule to unsubscribe after a timeout
+							delay(timeout)
+							singleEntityStates.getFlow(entityId).value = EntityState.EMPTY
+							singleEventSubscriber[entityId]?.cancel()
+						}
 					}
 				}
 			}
-		} else {
-			println("Processor for $entityId is active ${singleEventProcessor[entityId]?.isActive}")
 		}
 
 		// make sure both flows exist
