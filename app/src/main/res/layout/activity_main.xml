@@ -48,16 +48,25 @@
         android:paddingBottom="4dp"
         android:text="@string/lbl_starred_dashboards" />
 
-    <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/paneDashboardList"
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingBottom="4dp"
-        android:name="io.bimmergestalt.hassgestalt.phoneui.hass.DashboardListFragment" />
+        android:layout_height="match_parent">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <androidx.fragment.app.FragmentContainerView
+                android:id="@+id/paneDashboardList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingBottom="4dp"
+                android:name="io.bimmergestalt.hassgestalt.phoneui.hass.DashboardListFragment" />
 
-    <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/paneDashboardView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:name="io.bimmergestalt.hassgestalt.phoneui.hass.DashboardViewFragment" />
+            <androidx.fragment.app.FragmentContainerView
+                android:id="@+id/paneDashboardView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:name="io.bimmergestalt.hassgestalt.phoneui.hass.DashboardViewFragment" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 </LinearLayout>
