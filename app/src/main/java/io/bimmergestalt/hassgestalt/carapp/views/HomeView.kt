@@ -2,15 +2,13 @@ package io.bimmergestalt.hassgestalt.carapp.views
 
 import io.bimmergestalt.hassgestalt.L
 import io.bimmergestalt.hassgestalt.carapp.IconRenderer
-import io.bimmergestalt.hassgestalt.carapp.batchDataTables
-import io.bimmergestalt.hassgestalt.carapp.rhmiDataTableFlow
 import io.bimmergestalt.hassgestalt.hass.DashboardHeader
 import io.bimmergestalt.hassgestalt.hass.Lovelace
 import io.bimmergestalt.idriveconnectkit.rhmi.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
-class HomeView(val state: RHMIState, val iconRenderer: IconRenderer, val lovelace: Flow<Lovelace>, val starredDashboardNames: Flow<List<String>>) {
+class HomeView(val state: RHMIState, val iconRenderer: IconRenderer, val lovelace: Flow<Lovelace>, val dashboards: Flow<List<DashboardHeader>>) {
 	companion object {
 		fun fits(state: RHMIState): Boolean {
 			return state is RHMIState.PlainState &&
@@ -29,7 +27,7 @@ class HomeView(val state: RHMIState, val iconRenderer: IconRenderer, val lovelac
 	private val dashboardLabel = state.componentsList.filterIsInstance<RHMIComponent.Label>().last()
 	private val dashboardList = state.componentsList.filterIsInstance<RHMIComponent.List>().last()
 
-	private var dashboards = emptyList<DashboardHeader>()
+	private var shownDashboards = emptyList<DashboardHeader>()
 
 	fun initWidgets(dashboardView: DashboardView) {
 		state.getTextModel()?.asRaDataModel()?.value = L.APP_NAME
@@ -48,27 +46,20 @@ class HomeView(val state: RHMIState, val iconRenderer: IconRenderer, val lovelac
 		dashboardList.setProperty(RHMIProperty.PropertyId.LIST_COLUMNWIDTH, "50,*")
 		dashboardList.getAction()?.asHMIAction()?.getTargetModel()?.asRaIntModel()?.value = dashboardView.state.id
 		dashboardList.getAction()?.asRAAction()?.rhmiActionCallback = RHMIActionListCallback { index ->
-			val dashboard = dashboards.getOrNull(index)
+			val dashboard = shownDashboards.getOrNull(index)
 			dashboardView.currentDashboard = dashboard
 		}
 	}
 
 	private suspend fun onShow() {
 		coroutineScope.launch {
-			val allDashboards = lovelace.map {
-				it.getDashboardList()
-			}
-			val starredDashboards = allDashboards.combine(starredDashboardNames) { dashboards, starredNames ->
-				val starredNamesSet = starredNames.toSet()
-				dashboards.map {
-					it.copy(starred = starredNamesSet.contains(it.url_path))
-				}.filter {it.starred}.take(headings.size)
+			val starredDashboards = dashboards.map { currentDashboards ->
+				currentDashboards.filter { it.starred }.take(headings.size)
 			}
 
 			lovelace.combine(starredDashboards) { dashboardRenderer, dashboards ->
 				dashboards.forEachIndexed { index, dashboard ->
-					headings[index].getModel()?.asRaDataModel()?.value =
-						dashboard.title
+					headings[index].getModel()?.asRaDataModel()?.value = dashboard.title
 					headings[index].setVisible(true)
 
 					val entities = dashboardRenderer.renderDashboard(dashboard.url_path)
@@ -82,8 +73,8 @@ class HomeView(val state: RHMIState, val iconRenderer: IconRenderer, val lovelac
 		}
 
 		coroutineScope.launch {
-			lovelace.collectLatest { dashboardRenderer ->
-				dashboards = dashboardRenderer.getDashboardList()
+			dashboards.collectLatest { dashboards ->
+				shownDashboards = dashboards
 				dashboardList.getModel()?.value = object : RHMIModel.RaListModel.RHMIListAdapter<DashboardHeader>(2, dashboards) {
 					override fun convertRow(index: Int, item: DashboardHeader): Array<Any> =
 						arrayOf(

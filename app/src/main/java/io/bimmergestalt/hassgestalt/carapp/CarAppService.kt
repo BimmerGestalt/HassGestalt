@@ -97,12 +97,20 @@ class CarAppService: LifecycleService() {
 				val lovelace = hassApi.combine(stateTracker) { api, state ->
 					Lovelace(api, state)
 				}
+				val dashboards = lovelace.map {
+					it.getDashboardList()
+				}.combine(serverConfig.starredDashboards) { dashboards, starredNames ->
+					val starredNamesSet = starredNames.toSet()
+					dashboards.map {
+						it.copy(starred = starredNamesSet.contains(it.url_path))
+					}
+				}.shareIn(this.lifecycleScope, SharingStarted.WhileSubscribed(20000, 0), 1)
 				app = CarApp(
 					iDriveConnectionStatus,
 					securityAccess,
 					CarAppAssetResources(applicationContext, "smartthings"),
 					iconRenderer,
-					lovelace, serverConfig.starredDashboards
+					lovelace, dashboards
 				)
 			}
 			thread?.start()
