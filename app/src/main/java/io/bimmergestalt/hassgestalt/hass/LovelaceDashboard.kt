@@ -55,7 +55,7 @@ class LovelaceDashboard(val cards: List<LovelaceCard>) {
 				is LovelaceCardEntities -> results.addAll(card.entities.map { id ->
 					stateTracker[id].gainControl(hassApi)
 				})
-				is LovelaceCardSensor -> results.add(stateTracker[card.entityId].gainControl(hassApi))
+				is LovelaceCardSingle -> results.add(stateTracker[card.entityId].gainControl(hassApi))
 			}
 		}
 		return results
@@ -64,13 +64,28 @@ class LovelaceDashboard(val cards: List<LovelaceCard>) {
 
 sealed class LovelaceCard {
 	companion object {
+		/** Parse the Lovelace dashboard card config into a list of entities
+		 * Future development could use different subclasses to enable different UI features
+		 */
 		fun parse(data: JSONObject): LovelaceCard? {
 			Log.d(TAG, "Parsing lovelace card $data")
-			return when(data.optString("type")) {
-				"entities" -> LovelaceCardEntities(data.optJSONArray("entities")?.map {
-					(it as? JSONObject)?.optString("entity")
-				}?.filterNotNull() ?: emptyList())
-				"sensor" -> data.optString("entity")?.let { LovelaceCardSensor(it) }
+			val type = data.optString("type")
+			return when {
+				type == "map" -> null       // doesn't translate well to a text string
+				data.has("entity") -> {
+					LovelaceCardSingle(data.optString("entity"))
+				}
+				data.optJSONArray("entities") != null -> {
+					LovelaceCardEntities(data.optJSONArray("entities")?.map {
+						// statistics-graph just has a list of strings
+						// but most others have a list of objects
+						when (it) {
+							is JSONObject -> it.optString("entity")
+							is String -> it
+							else -> null
+						}
+					}?.filterNotNull() ?: emptyList())
+				}
 				else -> null
 			}
 		}
@@ -82,8 +97,8 @@ class LovelaceCardEntities(val entities: List<String>): LovelaceCard() {
 		return "LovelaceCardEntities($entities)"
 	}
 }
-class LovelaceCardSensor(val entityId: String): LovelaceCard() {
+class LovelaceCardSingle(val entityId: String): LovelaceCard() {
 	override fun toString(): String {
-		return "LovelaceCardSensor($entityId)"
+		return "LovelaceCardSingle($entityId)"
 	}
 }
