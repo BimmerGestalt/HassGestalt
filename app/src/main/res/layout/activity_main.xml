@@ -42,12 +42,6 @@
         android:name="io.bimmergestalt.hassgestalt.phoneui.hass.EntityStateFragment" />
     -->
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingBottom="4dp"
-        android:text="@string/lbl_starred_dashboards" />
-
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">

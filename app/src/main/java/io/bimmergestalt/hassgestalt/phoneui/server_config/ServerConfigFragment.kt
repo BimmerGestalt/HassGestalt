@@ -4,10 +4,12 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import io.bimmergestalt.hassgestalt.OauthAccess
+import io.bimmergestalt.hassgestalt.R
 import io.bimmergestalt.hassgestalt.ServerConfigBinding
 import io.bimmergestalt.hassgestalt.data.ServerConfigPersistence
 
@@ -38,6 +40,12 @@ class ServerConfigFragment: Fragment() {
 		super.onViewCreated(view, savedInstanceState)
 
 		oauthAccess.handleAuthorizationResponse(requireActivity().intent)
+		view.findViewById<EditText>(R.id.txt_instance_url).setOnEditorActionListener { v, actionId, event ->
+			// couldn't figure out databinding syntax
+			// android:onEditorAction="@{(view, actionId, event) -> controller.startLogin()}"
+			controller.startLogin()
+			true
+		}
 	}
 
 	override fun onDestroy() {

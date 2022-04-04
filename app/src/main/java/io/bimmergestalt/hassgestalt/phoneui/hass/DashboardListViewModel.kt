@@ -20,6 +20,7 @@ class DashboardListViewModel(val hassApi: Flow<HassApi>, val stateTracker: Flow<
 	}
 
 	val serverConfig = ServerConfig()
+	val isAuthorized = serverConfig.flow.map { it.isAuthorized }.asLiveData()
 
 	// needs to be before, because dashboardItems refers to it
 	val currentSelection: MutableLiveData<DashboardHeader?> = MutableLiveData<DashboardHeader?>(null)
