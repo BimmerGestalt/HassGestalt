@@ -10,6 +10,8 @@ repositories {
     maven { url 'https://jitpack.io' }
 }
 
+def isRunningOnCI = System.getenv("CI") == "true"
+
 android {
     compileSdkVersion 31
     buildToolsVersion "30.0.2"
@@ -28,6 +30,17 @@ android {
         ]
     }
 
+    signingConfigs {
+        release
+    }
+    if (isRunningOnCI) {
+        // configure keystore
+        signingConfigs.release.storeFile = file("../keystore.jks")
+        signingConfigs.release.storePassword = System.getenv("KEYSTORE_PASSWORD")
+        signingConfigs.release.keyAlias = System.getenv("KEYSTORE_ALIAS")
+        signingConfigs.release.keyPassword = System.getenv("KEYSTORE_ALIAS_PASSWORD")
+    }
+
     buildFeatures {
         dataBinding true
     }
@@ -35,6 +48,7 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
     compileOptions {
