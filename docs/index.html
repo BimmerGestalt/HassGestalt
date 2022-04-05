@@ -1,6 +1,30 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <title>Hass Gestalt</title>
+        <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css" />
+        <link rel="icon" type="image/png" href="icon_small.png" />
         <link rel="redirect_uri" href="io.bimmergestalt.hassgestalt://oauth_callback" />
+        <style>
+            :root {
+                --accent: #55c1f1;
+            }
+        </style>
     </head>
+    <body>
+        <div class="h-app">
+            <h1><img src="icon_small.png" class="u-logo" /> <a href="/HassGestalt/" class="u-url p-name">Hass Gestalt</a></h1>
+            <p class="p-summary">Access Home Assistant in BMW/Mini IDrive</p>
+        </div>
+        <p>
+            Most BMWs and Minis from around 2015-2021 implement a protocol that enables a feature named BMW Apps:
+            Selected phone apps can temporarily add themselves to the car and show a car-specific interface for safe interaction.
+            This is most commonly used to control the phone's music apps, but the protocol is much more powerful,
+            and <a href="https://github.com/BimmerGestalt/AAIdrive">AAIdrive</a> has unofficially implemented most of Android Auto's functionality through this protocol.
+        </p>
+        <p>
+            There used to be an official Samsung Smartthings app for the car, providing quick safe access to a subset of home automation through the car's dashboard.
+            Though that app is dead, <a href="https://github.com/BimmerGestalt/HassGestalt">Hass Gestalt</a> reimplements this home automation control by connecting to Home Assistant.
+        </p>
+    </body>
 </html>
