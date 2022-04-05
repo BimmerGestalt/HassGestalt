@@ -1,8 +1,9 @@
 HASS Gestalt
 ============
 
-Years ago, there used to be an official Samsung Smartthings app for the BMW/Mini IDrive Infotainment.
-This project, in combination with BimmerGestalt AAIdrive, reimplements the same convenient control over Home Assistant.
+Years ago, there used to be an official Samsung Smartthings app for BMW/Mini NBT IDrive 4-6.
+Though that app has since died, this project, in combination with [BimmerGestalt AAIdrive](https://github.com/BimmerGestalt/AAIdrive), reimplements the same convenient control over Home Assistant.
+Check on your house while you are out and about: View sensor status and remotely toggle smartlocks or lights, all while sitting in traffic!
 
 Server Access
 -------------
