@@ -2,6 +2,7 @@ plugins {
     id 'com.android.application'
     id 'kotlin-android'
     id 'kotlin-kapt'
+    id 'com.gladed.androidgitversion' version '0.4.14'
 }
 
 apply from: 'buildtools/external.gradle'
@@ -16,12 +17,22 @@ android {
     compileSdkVersion 31
     buildToolsVersion "30.0.2"
 
+    androidGitVersion {
+        hideBranches = [ 'main' ]
+        // include build number for CI builds, omit for local builds
+        // because local dev commonly involves switching between branches
+        if (isRunningOnCI) {
+            codeFormat = 'MMNNPPBBB'
+        } else {
+            codeFormat = 'MMNNPPXXX'
+        }
+    }
     defaultConfig {
         applicationId "io.bimmergestalt.hassgestalt"
         minSdkVersion 21
         targetSdkVersion 31
-        versionCode 1
-        versionName "1.0"
+        versionCode androidGitVersion.code() + 1
+        versionName androidGitVersion.name()
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
@@ -57,6 +68,16 @@ android {
     }
     kotlinOptions {
         jvmTarget = '1.8'
+    }
+
+    def assertGit = tasks.create(name: "assertGitVersionRelease") { doLast {
+        throw new GradleException("Could not load git versionCode for release build, make sure the project is cloned from git")
+    }}
+    applicationVariants.all { variant ->
+        if (!variant.buildType.isDebuggable() && variant.mergedFlavor.versionCode == 1) {
+            def assembleTaskName = "assemble${variant.name.capitalize()}"
+            tasks[assembleTaskName].dependsOn(assertGit)
+        }
     }
 }
 
