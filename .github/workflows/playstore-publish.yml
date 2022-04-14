@@ -62,5 +62,5 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SECRET }}
           packageName: io.bimmergestalt.hassgestalt
           releaseFiles: "bundle/*/*.aab"
-          track: beta
+          track: internal
           whatsNewDirectory: whats_new
