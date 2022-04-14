@@ -34,10 +34,12 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:minHeight="48dp"
                 android:maxLines="1"
                 android:inputType="textUri"
                 android:imeOptions="actionDone"
                 android:hint="https://myinstance.ui.nabu.casa"
+                android:textColorHint="?android:attr/textColorSecondary"
                 android:text="@{viewModel.serverName}"
                 android:onTextChanged="@{(text, start, before, count) -> controller.setServerName(text)}"
                 tools:ignore="HardcodedText">
