@@ -29,6 +29,7 @@
             android:gravity="center_vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
+            <!--suppress AndroidUnknownAttribute -->
             <EditText
                 android:id="@+id/txt_instance_url"
                 android:layout_width="0dp"
@@ -38,6 +39,7 @@
                 android:maxLines="1"
                 android:inputType="textUri"
                 android:imeOptions="actionDone"
+                android:importantForAutofill="no"
                 android:hint="https://myinstance.ui.nabu.casa"
                 android:textColorHint="?android:attr/textColorSecondary"
                 android:text="@{viewModel.serverName}"
@@ -48,24 +50,26 @@
                 android:layout_width="20dp"
                 android:layout_height="wrap_content"
                 android:src="@drawable/ic_baseline_check_24"
-                android:visibility="@{viewModel.isValid() == true}" />
+                android:visibility="@{viewModel.isValid() == true}"
+                android:contentDescription="@string/lbl_server_found" />
             <ImageView
                 android:layout_width="20dp"
                 android:layout_height="wrap_content"
                 android:src="@drawable/ic_baseline_close_24"
-                android:visibility="@{viewModel.isValid() == false}" />
+                android:visibility="@{viewModel.isValid() == false}"
+                android:contentDescription="@string/lbl_server_not_found" />
         </LinearLayout>
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:visibility="@{!viewModel.authenticated &amp;&amp; viewModel.isValid()}"
-            android:text="Login"
+            android:text="@string/lbl_login"
             android:onClick="@{() -> controller.startLogin()}"/>
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:visibility="@{viewModel.authenticated}"
-            android:text="Logout"
+            android:text="@string/lbl_logout"
             android:onClick="@{() -> controller.logout()}"/>
     </LinearLayout>
 </layout>
