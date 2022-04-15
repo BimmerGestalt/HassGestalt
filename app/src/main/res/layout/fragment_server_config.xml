@@ -46,18 +46,23 @@
                 android:onTextChanged="@{(text, start, before, count) -> controller.setServerName(text)}"
                 tools:ignore="HardcodedText">
             </EditText>
-            <ImageView
-                android:layout_width="20dp"
+            <LinearLayout
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@drawable/ic_baseline_check_24"
-                android:visibility="@{viewModel.isValid() == true}"
-                android:contentDescription="@string/lbl_server_found" />
-            <ImageView
-                android:layout_width="20dp"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_baseline_close_24"
-                android:visibility="@{viewModel.isValid() == false}"
-                android:contentDescription="@string/lbl_server_not_found" />
+                android:visibility="@{!viewModel.isAuthorized}">
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_baseline_check_24"
+                    android:visibility="@{viewModel.isValid() == true}"
+                    android:contentDescription="@string/lbl_server_found" />
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_baseline_close_24"
+                    android:visibility="@{viewModel.isValid() == false}"
+                    android:contentDescription="@string/lbl_server_not_found" />
+            </LinearLayout>
         </LinearLayout>
         <Button
             android:layout_width="wrap_content"
