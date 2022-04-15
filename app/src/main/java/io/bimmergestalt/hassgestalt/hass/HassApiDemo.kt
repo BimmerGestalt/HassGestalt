@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.*
 import org.json.JSONArray
 import org.json.JSONObject
 import java.time.OffsetDateTime
+import kotlin.random.Random
 
 class HassApiDemo(): HassApi {
 	companion object {
@@ -69,7 +70,7 @@ class HassApiDemo(): HassApi {
 
 	private val stateEvents = states.mapValues {
 		it.value.map {
-			delay(400)      // simulate api delay
+			delay(400 + Random(System.currentTimeMillis()).nextLong(100, 1000))      // simulate api delay
 			JSONObject().apply {
 				put("event", JSONObject().apply {
 					put("data", JSONObject().apply {
@@ -162,12 +163,14 @@ class HassApiDemo(): HassApi {
 				val service = request.optString("service")
 				val entityId = request.optJSONObject("target")?.optString("entity_id") ?: ""
 				val entity = states[entityId]
-				println("Received call_service $request against $entity")
+				println("Received call_service $request against ${entity?.value}")
 				if (entity != null) {
 					when {
 						entityId.startsWith("lock") -> entity.state = service + "ed"
 						service == "toggle" && entity.state == "on" -> entity.state = "off"
 						service == "toggle" && entity.state == "off" -> entity.state = "on"
+						service == "alarm_disarm" -> entity.state = "disarmed"
+						service == "alarm_arm_away" -> entity.state = "armed away"
 						else -> println("Unknown service to call")
 					}
 				}

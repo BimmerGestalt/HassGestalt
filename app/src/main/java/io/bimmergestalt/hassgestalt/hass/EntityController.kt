@@ -10,7 +10,8 @@ class EntityController(val hassApi: HassApi, val entityState: EntityState, val p
 		fun create(hassApi: HassApi, entityState: EntityState, pendingFlow: MutableSharedFlow<EntityRepresentation>): EntityController? {
 			val domain = entityState.entityId.split('.').first()
 			// only support some types
-			return if (domain == "group" ||
+			return if (domain == "alarm_control_panel" ||
+				domain == "group" ||
 				domain == "button" ||
 				domain == "input_button" ||
 				domain == "fan" ||
@@ -29,6 +30,7 @@ class EntityController(val hassApi: HassApi, val entityState: EntityState, val p
 	override fun invoke() {
 		val domain = entityState.entityId.split('.').first()
 		val service = when(domain) {
+			"alarm_control_panel" -> if (entityState.state == "disarmed") "alarm_arm_away" else "alarm_disarm"
 			"group" -> "toggle"
 			"button" -> "press"
 			"input_button" -> "press"
