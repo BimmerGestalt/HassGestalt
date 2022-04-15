@@ -61,7 +61,7 @@ class HassApiDemo(): HassApi {
 		stateFactory("light.bedroom_lamp", "Bedroom Lamp", "on", mapOf(
 			"brightness" to 50
 		)),
-		stateFactory("sensor.garage_door", "Garage Door", "off", mapOf(
+		stateFactory("cover.garage_door", "Garage Door", "closed", mapOf(
 			"raw_state_text" to "closed", "device_class" to "garage"
 		))
 	).map {
@@ -92,7 +92,7 @@ class HassApiDemo(): HassApi {
 			states["alarm_control_panel.partition_1"]!!,
 			states["lock.front_door"]!!,
 			states["light.front_door"]!!,
-			states["sensor.garage_door"]!!
+			states["cover.garage_door"]!!
 		)),
 		Dashboard("Lights", "mdi:lightbulb", listOf(
 			states["light.front_door"]!!,
