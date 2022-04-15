@@ -1,6 +1,7 @@
 package io.bimmergestalt.hassgestalt.data
 
 import androidx.lifecycle.MutableLiveData
+import io.bimmergestalt.hassgestalt.hass.HassApiDemo
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import net.openid.appauth.AuthState
@@ -34,6 +35,7 @@ class ServerConfig() {
 
 	var isValidServerName = MutableLiveData<Boolean?>(null)
 	val isAuthorized
-		get() = authState?.isAuthorized == true
-
+		get() = serverName == HassApiDemo.DEMO_URL || authState?.isAuthorized == true
+	val canLogout
+		get() = serverName != HassApiDemo.DEMO_URL && authState?.isAuthorized == true
 }

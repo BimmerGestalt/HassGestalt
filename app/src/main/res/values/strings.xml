@@ -3,6 +3,7 @@
     <string name="app_description">Working with BimmerGestalt AAIdrive, this app shows your Home Assistant dashboards in your BMW or MINI IDrive infotainment system.</string>
     <string name="lbl_server_name">Enter your Home Assistant server to connect and get started</string>
     <string name="lbl_starred_dashboards">You can star up to 4 dashboards to show directly in the main screen in your car.</string>
+    <string name="lbl_demo">Demo Server</string>
     <string name="lbl_login">Login</string>
     <string name="lbl_logout">Logout</string>
     <string name="lbl_server_found">Server found</string>

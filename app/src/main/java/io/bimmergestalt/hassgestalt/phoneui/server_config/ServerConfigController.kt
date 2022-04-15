@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.lifecycle.LifecycleCoroutineScope
 import io.bimmergestalt.hassgestalt.OauthAccess
 import io.bimmergestalt.hassgestalt.data.ServerConfig
+import io.bimmergestalt.hassgestalt.hass.HassApiDemo
 import io.bimmergestalt.hassgestalt.hass.HassWsClient
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -33,9 +34,18 @@ class ServerConfigController(val lifecycleScope: LifecycleCoroutineScope, val se
 			serverConfig.serverName = pendingServerName
 
 			if (pendingServerName.isNotBlank()) {
-				serverConfig.isValidServerName.value = HassWsClient.testUri(HassWsClient.parseUri(pendingServerName))
+				if (pendingServerName == HassApiDemo.DEMO_URL) {
+					serverConfig.isValidServerName.value = true
+				} else {
+					serverConfig.isValidServerName.value = HassWsClient.testUri(HassWsClient.parseUri(pendingServerName))
+				}
 			}
 		}
+	}
+
+	fun useDemo() {
+		serverConfig.serverName = HassApiDemo.DEMO_URL
+		serverConfig.authState = null
 	}
 
 	fun startLogin() {

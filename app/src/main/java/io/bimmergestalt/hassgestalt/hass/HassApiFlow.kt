@@ -9,7 +9,9 @@ import kotlinx.coroutines.flow.flatMapLatest
 fun Flow<ServerConfig>.hassApi(): Flow<HassApi> = flatMapLatest { serverConfig ->
 	callbackFlow<HassApi> {
 		val authState = serverConfig.authState
-		val api = if (authState != null) {
+		val api = if (serverConfig.serverName == HassApiDemo.DEMO_URL) {
+			HassApiDemo()
+		} else if (authState != null) {
 			HassApiConnection.connect(serverConfig.serverName, authState).await()
 		} else { null } ?: HassApiDisconnected()
 		send(api)

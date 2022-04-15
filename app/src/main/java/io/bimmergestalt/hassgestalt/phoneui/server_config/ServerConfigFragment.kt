@@ -25,7 +25,7 @@ class ServerConfigFragment: Fragment() {
 	override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
 		serverConfigPersistence.load()
 		serverConfigPersistence.startSaving()
-		viewModel.authenticated.observe(viewLifecycleOwner) {
+		viewModel.isAuthorized.observe(viewLifecycleOwner) {
 			oauthAccess.tryRefreshToken()
 		}
 

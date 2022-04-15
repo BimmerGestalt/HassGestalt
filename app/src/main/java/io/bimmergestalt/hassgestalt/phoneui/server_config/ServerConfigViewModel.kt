@@ -10,6 +10,8 @@ class ServerConfigViewModel(testServerConfig: ServerConfig? = null): ViewModel()
 	val serverConfig = testServerConfig ?: ServerConfig()
 
 	val serverName: LiveData<String> = serverConfig.flow.map { it.serverName }.asLiveData()
-	val authenticated: LiveData<Boolean> = serverConfig.flow.map { it.isAuthorized }.asLiveData()
+	val emptyServerName: LiveData<Boolean> = serverConfig.flow.map { it.serverName.isBlank() }.asLiveData()
+	val isAuthorized: LiveData<Boolean> = serverConfig.flow.map { it.isAuthorized }.asLiveData()
+	val canLogout = serverConfig.flow.map { it.canLogout }.asLiveData()
 	val isValid: LiveData<Boolean?> = serverConfig.isValidServerName
 }
