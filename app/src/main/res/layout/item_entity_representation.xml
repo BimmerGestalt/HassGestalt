@@ -10,11 +10,12 @@
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="32dp"
+        android:layout_height="wrap_content"
+        android:minHeight="48dp"
         android:gravity="center_vertical">
         <ImageView
-            android:layout_width="16dp"
-            android:layout_height="16dp"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
             android:src="@{entityRepresentation.icon}"
             tools:ignore="ContentDescription" />
         <TextView
@@ -31,7 +32,8 @@
             android:text="@{entityRepresentation.state}" />
         <Button
             android:layout_width="40dp"
-            android:layout_height="30dp"
+            android:layout_height="32dp"
+            android:layout_margin="8dp"
             android:visibility="@{entityRepresentation.action != null}"
             android:onClick="@{() -> entityRepresentation.tryClick()}" />
     </LinearLayout>

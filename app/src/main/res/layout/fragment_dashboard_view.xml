@@ -10,10 +10,14 @@
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp">
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:gravity="center_vertical"
             android:text="@{viewModel.currentSelection.title}" />
 
         <androidx.recyclerview.widget.RecyclerView
