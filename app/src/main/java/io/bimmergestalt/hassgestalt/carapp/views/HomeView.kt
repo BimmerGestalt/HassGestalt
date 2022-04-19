@@ -61,8 +61,10 @@ class HomeView(val state: RHMIState, val iconRenderer: IconRenderer, val lovelac
 				dashboards.forEachIndexed { index, dashboard ->
 					headings[index].getModel()?.asRaDataModel()?.value = dashboard.title
 					headings[index].setVisible(true)
+					headings[index].setProperty(RHMIProperty.PropertyId.LABEL_WAITINGANIMATION, true)
 
 					val entities = dashboardRenderer.renderDashboard(dashboard.url_path)
+					headings[index].setProperty(RHMIProperty.PropertyId.LABEL_WAITINGANIMATION, false)
 					dashboardListComponents[index].show(entities)
 				}
 				(dashboards.size until headings.size).forEach { index ->
@@ -73,8 +75,10 @@ class HomeView(val state: RHMIState, val iconRenderer: IconRenderer, val lovelac
 		}
 
 		coroutineScope.launch {
+			dashboardLabel.setProperty(RHMIProperty.PropertyId.LABEL_WAITINGANIMATION, true)
 			dashboards.collectLatest { dashboards ->
 				shownDashboards = dashboards
+				dashboardLabel.setProperty(RHMIProperty.PropertyId.LABEL_WAITINGANIMATION, false)
 				dashboardList.getModel()?.value = object : RHMIModel.RaListModel.RHMIListAdapter<DashboardHeader>(2, dashboards) {
 					override fun convertRow(index: Int, item: DashboardHeader): Array<Any> =
 						arrayOf(

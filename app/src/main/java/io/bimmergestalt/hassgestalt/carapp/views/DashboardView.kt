@@ -19,6 +19,7 @@ class DashboardView(val state: RHMIState, val iconRenderer: IconRenderer,
 	private val coroutineScope = CoroutineScope(Job() + Dispatchers.IO)
 
 	var currentDashboard: DashboardHeader? = null
+	val labelComponent = state.componentsList.filterIsInstance<RHMIComponent.Label>().first()
 	val listComponent = state.componentsList.filterIsInstance<RHMIComponent.List>().first()
 	val dashboardListComponent = DashboardListComponent(coroutineScope, listComponent, iconRenderer)
 
@@ -33,18 +34,22 @@ class DashboardView(val state: RHMIState, val iconRenderer: IconRenderer,
 				dashboardListComponent.hide()
 			}
 		}
+		labelComponent.setVisible(true)
 	}
 
 	private suspend fun onShow() {
 		state.getTextModel()?.asRaDataModel()?.value = currentDashboard?.title ?: "[Unknown]"
+		labelComponent.getModel()?.asRaDataModel()?.value = currentDashboard?.title ?: "[Unknown]"
 
 		val dashboardEntries = lovelace.map { dashboardRenderer ->
 			val currentDashboard = currentDashboard
 			if (currentDashboard != null) {
+				labelComponent.setProperty(RHMIProperty.PropertyId.LABEL_WAITINGANIMATION, true)
 				dashboardRenderer.renderDashboard(currentDashboard.url_path)
 			} else { emptyList() }
 		}
 		dashboardEntries.collectLatest {
+			labelComponent.setProperty(RHMIProperty.PropertyId.LABEL_WAITINGANIMATION, false)
 			dashboardListComponent.show(it)
 		}
 	}
