@@ -6,9 +6,9 @@ import android.os.Bundle
 import androidx.lifecycle.lifecycleScope
 import io.bimmergestalt.hassgestalt.R
 import io.bimmergestalt.hassgestalt.hass.StateTracker
-import io.bimmergestalt.hassgestalt.hass.HassApi
 import io.bimmergestalt.hassgestalt.data.ServerConfig
 import io.bimmergestalt.hassgestalt.hass.HassApiConnection
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.io.InputStream
@@ -53,22 +53,24 @@ class MainActivity : AppCompatActivity() {
 
 	fun tryWebsocket() {
 		lifecycleScope.launch {
-			val api = HassApiConnection.connect(serverConfig.serverName, serverConfig.authState!!).await()
-			if (api != null) {
-				val states = api.request(JSONObject().apply {
-					put("type", "get_states")
-				})
-				val panels = api.request(JSONObject().apply {
-					put("type", "get_panels")
-				})
-				val panelConfig = api.request(JSONObject().apply {
-					put("type", "lovelace/config")
-					put("url_path", "lovelace-cooper")
-				})
-				println("States: ${states.await()}")
-				println("Panels: ${panels.await()}")
-				println("Cooper Panel: ${panelConfig.await()}")
-				val state = StateTracker(lifecycleScope, api)
+			val apiFlow = HassApiConnection.create(serverConfig.serverName, serverConfig.authState!!).connect()
+			apiFlow.collectLatest { api ->
+				if (api != null) {
+					val states = api.request(JSONObject().apply {
+						put("type", "get_states")
+					})
+					val panels = api.request(JSONObject().apply {
+						put("type", "get_panels")
+					})
+					val panelConfig = api.request(JSONObject().apply {
+						put("type", "lovelace/config")
+						put("url_path", "lovelace-cooper")
+					})
+					println("States: ${states.await()}")
+					println("Panels: ${panels.await()}")
+					println("Cooper Panel: ${panelConfig.await()}")
+					val state = StateTracker(lifecycleScope, api)
+				}
 			}
 		}
 	}

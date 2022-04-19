@@ -5,10 +5,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.runBlocking
 import net.openid.appauth.AuthState
 import org.json.JSONArray
@@ -60,30 +57,34 @@ class HassApiDisconnected(): HassApi {
 
 class HassApiConnection(val wsURI: URI, private val authState: AuthState): HassApi {
 	companion object {
-		fun connect(httpUri: String, authState: AuthState): Deferred<HassApiConnection?> {
-			val api = HassApiConnection(HassWsClient.parseUri(httpUri), authState)
-			return api.connectAsync()
+		fun create(httpUri: String, authState: AuthState): HassApiConnection {
+			return HassApiConnection(HassWsClient.parseUri(httpUri), authState)
 		}
 	}
 	inner class Callback: HassWsClient.Callback {
 		override fun onMessage(message: JSONObject) {
 			when(message.getString("type")) {
 				"auth_required" -> onAuthRequired()
-				"auth_ok" -> connecting.complete(this@HassApiConnection)
-				"auth_invalid" -> connecting.complete(null)
+				"auth_ok" -> connectingFlow.tryEmit(this@HassApiConnection)
+				"auth_invalid" -> connectingFlow.tryEmit(null)
 				"event" -> onEvent(message)
 				"result" -> onResult(message)
 			}
 		}
 
 		override fun onConnection(connected: Boolean) {
+			if (!connected) {
+				onDisconnected()
+			}
 		}
 
 		override fun onError(ex: Exception?) {
+			onDisconnected()
 		}
 	}
-	val client = HassWsClient(wsURI, this.Callback())
-	private var connecting: CompletableDeferred<HassApiConnection?> = CompletableDeferred()
+	private val client = HassWsClient(wsURI, this.Callback())
+	private var clientUsed = false
+	private var connectingFlow = MutableSharedFlow<HassApiConnection?>(1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 	val isConnected: Boolean
 		get() = client.connected
 
@@ -91,12 +92,16 @@ class HassApiConnection(val wsURI: URI, private val authState: AuthState): HassA
 	val subscriptions = HashMap<Int, MutableSharedFlow<JSONObject>>()
 	val pendingCommands = HashMap<Int, CompletableDeferred<JSONObject>>()
 
-	fun connectAsync(): Deferred<HassApiConnection?> {
+	fun connect(): Flow<HassApiConnection?> {
 		if (!isConnected) {
-			this.connecting = CompletableDeferred()
-			client.connect()
+			if (!clientUsed) {
+				clientUsed = true
+				client.connect()
+			} else {
+				client.reconnect()
+			}
 		}
-		return this.connecting
+		return this.connectingFlow
 	}
 
 	private fun onAuthRequired() {
@@ -105,6 +110,12 @@ class HassApiConnection(val wsURI: URI, private val authState: AuthState): HassA
 			put("type", "auth")
 			put("access_token", authState.accessToken)
 		})
+	}
+
+	private fun onDisconnected() {
+		subscriptions.clear()
+		pendingCommands.clear()
+		connectingFlow.tryEmit(null)
 	}
 
 	fun disconnect() {

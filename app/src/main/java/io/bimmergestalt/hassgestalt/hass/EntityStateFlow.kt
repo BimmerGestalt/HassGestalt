@@ -14,7 +14,7 @@ fun Flow<HassApi>.stateTracker(timeout: Long = DEFAULT_EXPIRATION): Flow<StateTr
 		val stateTracker = StateTracker(this, hassApi, timeout)
 		send(stateTracker)
 		awaitClose {
-			println("HassApi connection is out of scope, disconnecting")
+			println("HassApi connection is out of scope, unsubscribing")
 			stateTracker.unsubscribeAll()
 		}
 }}

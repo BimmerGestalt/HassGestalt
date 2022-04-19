@@ -1,25 +1,50 @@
 package io.bimmergestalt.hassgestalt.hass
 
 import io.bimmergestalt.hassgestalt.data.ServerConfig
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 fun Flow<ServerConfig>.hassApi(): Flow<HassApi> = flatMapLatest { serverConfig ->
 	callbackFlow<HassApi> {
 		val authState = serverConfig.authState
-		val api = if (serverConfig.serverName == HassApiDemo.DEMO_URL) {
-			HassApiDemo()
-		} else if (authState != null) {
-			HassApiConnection.connect(serverConfig.serverName, authState).await()
-		} else { null } ?: HassApiDisconnected()
-		send(api)
+		val hassApiConnection = if (authState != null) {
+			HassApiConnection.create(serverConfig.serverName, authState)
+		} else {
+			null
+		}
+		val apiFlow = when {
+			serverConfig.serverName == HassApiDemo.DEMO_URL -> flowOf(HassApiDemo())
+			hassApiConnection != null -> hassApiConnection.connect()
+			else -> { flowOf(null) }
+		}
+
+		launch {
+			apiFlow.collectLatest {
+				if (it != null) {
+					send(it)
+				} else {
+					send(HassApiDisconnected())
+
+					// retry every so often while the UI is watching
+					// hassApiConnection will send a new connection (or null) through apiFlow after each attempt
+					if (hassApiConnection != null) {
+						delay(5_000)
+						println("Trying to reconnect hassApiConnection")
+						withContext(Dispatchers.IO) {
+							hassApiConnection.connect()
+						}
+					}
+				}
+			}
+		}
 
 		awaitClose {
-			if (api is HassApiConnection) {
-				api.disconnect()
-			}
+			println("HassApi flow is out of scope, disconnecting")
+			hassApiConnection?.disconnect()
 		}
 	}
 }
