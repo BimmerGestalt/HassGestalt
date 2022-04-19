@@ -15,14 +15,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
-        android:contentDescription="@string/btn_view_dashboard"
+        android:contentDescription="@{@string/btn_view_dashboard(dashboardHeader.title)}"
         android:onClick="@{() -> viewModel.setCurrentSelection(dashboardHeader)}">
         <ImageView
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:padding="12dp"
             android:src="@drawable/ic_baseline_star_outline_24"
-            android:contentDescription="@string/btn_favorite_dashboard"
+            android:contentDescription="@{@string/btn_favorite_dashboard(dashboardHeader.title)}"
             android:visibility="@{!dashboardHeader.starred}"
             android:onClick="@{() -> viewModel.toggleDashboardStar(dashboardHeader.url_path)}"/>
         <ImageView
@@ -30,7 +30,7 @@
             android:layout_height="48dp"
             android:padding="12dp"
             android:src="@drawable/ic_baseline_star_24"
-            android:contentDescription="@string/btn_unfavorite_dashboard"
+            android:contentDescription="@{@string/btn_unfavorite_dashboard(dashboardHeader.title)}"
             android:visibility="@{dashboardHeader.starred}"
             android:onClick="@{() -> viewModel.toggleDashboardStar(dashboardHeader.url_path)}"/>
         <ImageView
@@ -45,8 +45,7 @@
             android:paddingBottom="6dp"
             android:paddingStart="8dp"
             android:paddingEnd="8dp"
-            android:text="@{dashboardHeader.title}"
-            />
+            android:text="@{dashboardHeader.title}" />
 
     </LinearLayout>
 </layout>

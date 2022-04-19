@@ -9,10 +9,10 @@
     <string name="lbl_server_found">Server found</string>
     <string name="lbl_server_not_found">Server not found</string>
 
-    <string name="btn_favorite_dashboard">Mark as Favorite Dashboard</string>
-    <string name="btn_unfavorite_dashboard">Unmark as Favorite Dashboard</string>
-    <string name="btn_view_dashboard">View Dashboard</string>
-    <string name="btn_toggle">Toggle</string>
+    <string name="btn_favorite_dashboard">Mark %s as Favorite Dashboard</string>
+    <string name="btn_unfavorite_dashboard">Unmark %s as Favorite Dashboard</string>
+    <string name="btn_view_dashboard">View %s Dashboard</string>
+    <string name="btn_toggle">Toggle %s</string>
 
     <!-- Car Strings, must provide every string from L.kt -->
     <string name="APP_NAME">HASS Gestalt</string>

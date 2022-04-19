@@ -30,16 +30,15 @@
             android:paddingStart="8dp"
             android:paddingEnd="8dp"
             android:text="@{entityRepresentation.state}" />
-        <LinearLayout
+        <Button
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:gravity="center_vertical"
-            android:contentDescription="@string/btn_toggle"
+            android:insetTop="12dp"
+            android:insetBottom="12dp"
+            android:insetLeft="4dp"
+            android:insetRight="4dp"
+            android:contentDescription="@{@string/btn_toggle(entityRepresentation.name)}"
             android:visibility="@{entityRepresentation.action != null}"
-            android:onClick="@{() -> entityRepresentation.tryClick()}">
-            <Button
-                android:layout_width="40dp"
-                android:layout_height="32dp" />
-        </LinearLayout>
+            android:onClick="@{() -> entityRepresentation.tryClick()}"/>
     </LinearLayout>
 </layout>
