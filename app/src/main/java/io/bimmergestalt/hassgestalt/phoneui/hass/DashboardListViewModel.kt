@@ -6,9 +6,7 @@ import io.bimmergestalt.hassgestalt.R
 import io.bimmergestalt.hassgestalt.data.ServerConfig
 import io.bimmergestalt.hassgestalt.hass.*
 import io.bimmergestalt.hassgestalt.phoneui.asObservableList
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 import me.tatarka.bindingcollectionadapter2.ItemBinding
 
 class DashboardListViewModel(val hassApi: Flow<HassApi>, val stateTracker: Flow<StateTracker>): ViewModel() {
@@ -26,8 +24,12 @@ class DashboardListViewModel(val hassApi: Flow<HassApi>, val stateTracker: Flow<
 	val currentSelection: MutableLiveData<DashboardHeader?> = MutableLiveData<DashboardHeader?>(null)
 
 	val lovelace = hassApi.combine(stateTracker) { api, state -> Lovelace(api, state) }
+	private val _isLoadingDashboards = MutableLiveData(false)
+	val isLoadingDashboards: LiveData<Boolean> = _isLoadingDashboards
 	val lovelaceDashboards = lovelace.map { config ->
+		_isLoadingDashboards.value = true
 		config.getDashboardList().also {
+			_isLoadingDashboards.value = false
 			val currentSelection = currentSelection.value
 			if (currentSelection != null && !it.contains(currentSelection)) {
 				this.currentSelection.postValue(null)
@@ -42,12 +44,31 @@ class DashboardListViewModel(val hassApi: Flow<HassApi>, val stateTracker: Flow<
 	val dashboardItemsBinding = ItemBinding.of<DashboardHeader>(BR.dashboardHeader, R.layout.item_dashboard)
 		.bindExtra(BR.viewModel, this)
 
-	val dashboardEntities = lovelace.combine(currentSelection.asFlow()) { config, selected ->
+	private val _isLoadingDashboardEntities = MutableStateFlow(false)
+	val dashboardEntities: Flow<List<Flow<EntityRepresentation>>> = lovelace.combine(currentSelection.asFlow()) { config, selected ->
 		if (selected != null) {
-			config.renderDashboard(selected.url_path)
-				.map {it.asLiveData()}
-		} else { emptyList() }
-	}.asObservableList(viewModelScope)
+			_isLoadingDashboardEntities.value = true
+			config.renderDashboard(selected.url_path).also {
+				_isLoadingDashboardEntities.value = false
+			}
+		} else {
+			_isLoadingDashboardEntities.value = false
+			emptyList()
+		}
+	}
+	val isLoadingDashboardEntities: LiveData<Boolean> = _isLoadingDashboardEntities.combine(dashboardEntities.isLoading(false)) { stage1, stage2 ->
+		stage1 || stage2
+	}.debounce(100).asLiveData()
+	val dashboardPlaceholderEntities = currentSelection.asFlow().map {
+		emptyList<Flow<EntityRepresentation>>()
+	}
+	val dashboardEntitiesCombined = merge(dashboardPlaceholderEntities, dashboardEntities)
+	val dashboardEntitiesLiveData = dashboardEntitiesCombined.mapLatest { entities ->
+		entities.map {
+			it.asLiveData()
+		}
+	}
+	val dashboardEntitiesList = dashboardEntitiesLiveData.asObservableList(viewModelScope)
 
 	val dashboardEntitiesBinding = ItemBinding.of<LiveData<EntityRepresentation>>(BR.entityRepresentation, R.layout.item_entity_representation)
 
@@ -61,6 +82,7 @@ class DashboardListViewModel(val hassApi: Flow<HassApi>, val stateTracker: Flow<
 		serverConfig.starredDashboards.value = starred
 	}
 	fun setCurrentSelection(value: DashboardHeader) {
+		dashboardEntitiesList.clear()
 		if (currentSelection.value == value) {
 			currentSelection.value = null
 		} else {

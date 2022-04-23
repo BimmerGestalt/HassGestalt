@@ -7,13 +7,10 @@ import com.mikepenz.iconics.IconicsColor
 import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.utils.color
 import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.*
 
 data class EntityRepresentation(val iconName: String, val icon: (Context.() -> Drawable)?,
-                                val entityId: String, val name: String, val state: String,
+                                val entityId: String, val name: String, val state: String, val loading: Boolean,
                                 val actionIcon: Drawable?, val action: (() -> Unit)?,
 ) {
 	companion object {
@@ -32,7 +29,7 @@ data class EntityRepresentation(val iconName: String, val icon: (Context.() -> D
 
 			return EntityRepresentation(state.icon(), iconDrawable,
 				state.entityId, state.label,
-				state.stateText,
+				state.stateText, state == EntityState.EMPTY,
 				controller?.icon, controller)
 		}
 
@@ -53,4 +50,12 @@ data class EntityRepresentation(val iconName: String, val icon: (Context.() -> D
 	override fun toString(): String {
 		return "$name $state"
 	}
+}
+
+fun List<Flow<EntityRepresentation>>.isLoading(includeControlled: Boolean): Flow<Boolean> = combine(this) { entities ->
+	entities.any { it.loading || (includeControlled && it.state == "...") }
+}
+
+fun Flow<List<Flow<EntityRepresentation>>>.isLoading(includeControlled: Boolean): Flow<Boolean> = flatMapLatest { currentEntities ->
+	currentEntities.isLoading(includeControlled)
 }

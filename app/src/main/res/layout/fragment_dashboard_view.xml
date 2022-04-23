@@ -20,11 +20,22 @@
             android:gravity="center_vertical"
             android:text="@{viewModel.currentSelection.title}" />
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center">
+            <ProgressBar
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:indeterminate="true"
+                android:visibility="@{viewModel.isLoadingDashboardEntities}" />
+        </LinearLayout>
         <androidx.recyclerview.widget.RecyclerView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            app:items="@{viewModel.dashboardEntities}"
-            app:itemBinding="@{viewModel.dashboardEntitiesBinding}"/>
+            app:items="@{viewModel.dashboardEntitiesList}"
+            app:itemBinding="@{viewModel.dashboardEntitiesBinding}"
+            android:visibility="@{!viewModel.isLoadingDashboardEntities}" />
     </LinearLayout>
 </layout>

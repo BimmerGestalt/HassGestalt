@@ -48,9 +48,13 @@ class DashboardView(val state: RHMIState, val iconRenderer: IconRenderer,
 				dashboardRenderer.renderDashboard(currentDashboard.url_path)
 			} else { emptyList() }
 		}
-		dashboardEntries.collectLatest {
-			labelComponent.setProperty(RHMIProperty.PropertyId.LABEL_WAITINGANIMATION, false)
-			dashboardListComponent.show(it)
+		coroutineScope.launch {
+			dashboardEntries.isLoading(true).collect {
+				labelComponent.setProperty(RHMIProperty.PropertyId.LABEL_WAITINGANIMATION, it)
+			}
+		}
+		dashboardEntries.collectLatest { entities ->
+			dashboardListComponent.show(entities)
 		}
 	}
 }

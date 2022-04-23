@@ -4,6 +4,7 @@ import io.bimmergestalt.hassgestalt.L
 import io.bimmergestalt.hassgestalt.carapp.IconRenderer
 import io.bimmergestalt.hassgestalt.hass.DashboardHeader
 import io.bimmergestalt.hassgestalt.hass.Lovelace
+import io.bimmergestalt.hassgestalt.hass.isLoading
 import io.bimmergestalt.idriveconnectkit.rhmi.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -64,7 +65,13 @@ class HomeView(val state: RHMIState, val iconRenderer: IconRenderer, val lovelac
 					headings[index].setProperty(RHMIProperty.PropertyId.LABEL_WAITINGANIMATION, true)
 
 					val entities = dashboardRenderer.renderDashboard(dashboard.url_path)
-					headings[index].setProperty(RHMIProperty.PropertyId.LABEL_WAITINGANIMATION, false)
+
+					coroutineScope.launch {
+						entities.isLoading(true).collect {
+							headings[index].setProperty(RHMIProperty.PropertyId.LABEL_WAITINGANIMATION, it)
+						}
+					}
+
 					dashboardListComponents[index].show(entities)
 				}
 				(dashboards.size until headings.size).forEach { index ->
