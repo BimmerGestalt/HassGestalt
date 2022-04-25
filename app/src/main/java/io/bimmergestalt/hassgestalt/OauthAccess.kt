@@ -4,6 +4,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.util.Log
 import io.bimmergestalt.hassgestalt.phoneui.MainActivity
 import net.openid.appauth.*
@@ -39,8 +40,13 @@ class OauthAccess(private val context: Context, private val previousAuthState: A
 		builder.setState(uri.toString())
 		val authRequest = builder.build()
 
+		val pendingIntentFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+			PendingIntent.FLAG_IMMUTABLE
+		} else {
+			0
+		}
 		authService.performAuthorizationRequest(authRequest,
-			PendingIntent.getActivity(context, 0, Intent(context, MainActivity::class.java), 0)
+			PendingIntent.getActivity(context, 0, Intent(context, MainActivity::class.java), pendingIntentFlags)
 		)
 	}
 
