@@ -40,8 +40,8 @@ class OauthAccess(private val context: Context, private val previousAuthState: A
 		builder.setState(uri.toString())
 		val authRequest = builder.build()
 
-		val pendingIntentFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-			PendingIntent.FLAG_IMMUTABLE
+		val pendingIntentFlags = if (Build.VERSION.SDK_INT >= 31) {
+			PendingIntent.FLAG_MUTABLE
 		} else {
 			0
 		}
