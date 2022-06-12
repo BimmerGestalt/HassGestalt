@@ -24,7 +24,7 @@ class OauthAccess(private val context: Context, private val previousAuthState: A
 		}
 		.build()
 	private val authService = AuthorizationService(context, authConfig)
-	private val authState = previousAuthState ?: AuthState()
+	private var authState = previousAuthState ?: AuthState()
 
 	fun startAuthRequest(uri: Uri) {
 		val serviceConfig = AuthorizationServiceConfiguration(
@@ -84,6 +84,9 @@ class OauthAccess(private val context: Context, private val previousAuthState: A
 		}
 	}
 
+	fun logout() {
+		authState = AuthState()
+	}
 	fun dispose() {
 		authService.dispose()
 	}

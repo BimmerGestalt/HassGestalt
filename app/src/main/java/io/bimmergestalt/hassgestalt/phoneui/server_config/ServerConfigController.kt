@@ -53,5 +53,6 @@ class ServerConfigController(val lifecycleScope: LifecycleCoroutineScope, val se
 	}
 	fun logout() {
 		serverConfig.authState = null
+		oauthAccess.logout()
 	}
 }
