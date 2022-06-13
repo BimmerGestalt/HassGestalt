@@ -53,7 +53,7 @@ class OauthAccess(private val context: Context, private val previousAuthState: A
 	fun handleAuthorizationResponse(intent: Intent) {
 		val response = AuthorizationResponse.fromIntent(intent)
 		val ex = AuthorizationException.fromIntent(intent)
-		if (response != null) {
+		if (response != null || ex != null) {
 			Log.d(TAG, "Received auth response $response $ex")
 			authState.update(response, ex)
 			callback(authState)
