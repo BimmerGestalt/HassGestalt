@@ -35,6 +35,10 @@ class DashboardListViewModel(val hassApi: Flow<HassApi>, val stateTracker: Flow<
 		}
 	}
 
+	val emptyDashboards = lovelaceDashboards.map {
+		it.isEmpty()
+	}.asLiveData()
+
 	val dashboardItems = lovelaceDashboards.combine(serverConfig.starredDashboards) { dashboardList, starredDashboards ->
 		val starred = HashSet(starredDashboards)
 		dashboardList.map { it.copy(starred = starred.contains(it.url_path)) }

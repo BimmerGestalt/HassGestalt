@@ -26,5 +26,10 @@
             app:items="@{viewModel.dashboardItems}"
             app:itemBinding="@{viewModel.dashboardItemsBinding}"/>
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/lbl_empty_dashboards"
+            android:visibility="@{viewModel.isAuthorized() &amp;&amp; viewModel.emptyDashboards}" />
     </LinearLayout>
 </layout>
