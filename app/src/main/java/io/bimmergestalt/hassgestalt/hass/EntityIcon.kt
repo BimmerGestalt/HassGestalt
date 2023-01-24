@@ -84,6 +84,7 @@ object EntityIcon {
 				"opening" -> "mdi:arrow-split-vertical"
 				"closing" -> "mdi:arrow-collapse-horizontal"
 				"closed" -> "mdi:blinds"
+				"off" -> "mdi:blinds"
 				else ->  "mdi:blinds-open"
 			}
 			"cold" -> if (state == "on") "mdi:snowflake" else "mdi:thermometer"
@@ -92,19 +93,22 @@ object EntityIcon {
 				"opening" -> "mdi:arrow-split-vertical"
 				"closing" -> "mdi:arrow-collapse-horizontal"
 				"closed" -> "mdi:curtains-closed"
+				"off" -> "mdi:curtains-closed"
 				else ->  "mdi:curtains"
 			}
-			"door" -> if (state == "open") "mdi:door-open" else "mdi:door-closed"
-			"damper" -> if (state == "open") "mdi:circle" else "mdi:circle-slice-8"
+			"door" -> if (state == "open" || state == "on") "mdi:door-open" else "mdi:door-closed"
+			"damper" -> if (state == "open" || state == "on") "mdi:circle" else "mdi:circle-slice-8"
 			"garage", "garage_door" -> when(state) {
 				"opening" -> "mdi:arrow-up-box"
 				"closing" -> "mdi:arrow-down-box"
 				"closed" -> "mdi:garage"
+				"off" -> "mdi-garage"
 				else -> "mdi:garage-open"
 			}
 			"gate" -> when(state) {
 				"opening", "closing" -> "mdi:gate-arrow-right"
 				"closed" -> "mdi:gate"
+				"off" -> "mdi:gate"
 				else -> "mdi:gate-open"
 			}
 			"gas", "problem", "safety", "tamper" -> if (state == "on") "mdi:alert-circle" else "mdi:check-circle"
@@ -121,6 +125,7 @@ object EntityIcon {
 				"opening" -> "mdi:arrow-up-box"
 				"closing" -> "mdi:arrow-down-box"
 				"closed" -> "mdi:window-shutter-closed"
+				"off" -> "mdi:window-shutter-closed"
 				else ->  "mdi:window-shutter-open"
 			}
 			"smoke" -> if (state == "on") "mdi:smoke" else "mdi:check-circle"
