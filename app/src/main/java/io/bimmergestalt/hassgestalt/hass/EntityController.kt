@@ -4,11 +4,11 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import org.json.JSONObject
 import java.lang.AssertionError
 
-class EntityController(val hassApi: HassApi, val entityState: EntityState, val pendingFlow: MutableSharedFlow<EntityRepresentation>): ()->Unit {
+class EntityController(val hassApi: HassApi, val entityRepresentation: EntityRepresentation, val pendingFlow: MutableSharedFlow<EntityRepresentation>): ()->Unit {
 
 	companion object {
-		fun create(hassApi: HassApi, entityState: EntityState, pendingFlow: MutableSharedFlow<EntityRepresentation>): EntityController? {
-			val domain = entityState.entityId.split('.').first()
+		fun create(hassApi: HassApi, entityRepresentation: EntityRepresentation, pendingFlow: MutableSharedFlow<EntityRepresentation>): EntityController? {
+			val domain = entityRepresentation.entityId.split('.').first()
 			// only support some types
 			return if (domain == "alarm_control_panel" ||
 				domain == "group" ||
@@ -18,7 +18,7 @@ class EntityController(val hassApi: HassApi, val entityState: EntityState, val p
 				domain == "light" ||
 				domain == "lock" ||
 				domain == "switch") {
-				EntityController(hassApi, entityState, pendingFlow)
+				EntityController(hassApi, entityRepresentation, pendingFlow)
 			} else {
 				null
 			}
@@ -28,26 +28,26 @@ class EntityController(val hassApi: HassApi, val entityState: EntityState, val p
 	val icon = null
 
 	override fun invoke() {
-		val domain = entityState.entityId.split('.').first()
+		val domain = entityRepresentation.entityId.split('.').first()
 		val service = when(domain) {
-			"alarm_control_panel" -> if (entityState.state == "disarmed") "alarm_arm_away" else "alarm_disarm"
+			"alarm_control_panel" -> if (entityRepresentation.state == "disarmed") "alarm_arm_away" else "alarm_disarm"
 			"group" -> "toggle"
 			"button" -> "press"
 			"input_button" -> "press"
 			"fan" -> "toggle"
 			"light" -> "toggle"
-			"lock" -> if (entityState.state == "locked") "unlock" else "lock"
+			"lock" -> if (entityRepresentation.state == "locked") "unlock" else "lock"
 			"switch" -> "toggle"
-			else -> throw AssertionError("Unknown domain type $domain for entity ${entityState.entityId}")
+			else -> throw AssertionError("Unknown domain type $domain for entity ${entityRepresentation.entityId}")
 		}
 		val commandDomain = if (domain == "group") "homeassistant" else domain
-		pendingFlow.tryEmit(EntityRepresentation.fromEntityState(entityState, null).copy(state = "..."))
+		pendingFlow.tryEmit(entityRepresentation.copy(stateText = "..."))
 		hassApi.request(JSONObject().apply {
 			put("type", "call_service")
 			put("domain", commandDomain)
 			put("service", service)
 			put("target", JSONObject().apply {
-				put("entity_id", entityState.entityId)
+				put("entity_id", entityRepresentation.entityId)
 			})
 		})
 	}

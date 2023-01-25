@@ -7,6 +7,7 @@ import android.graphics.drawable.Drawable
 import com.mikepenz.iconics.IconicsColor
 import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.utils.color
+import io.bimmergestalt.hassgestalt.hass.EntityRepresentation.Companion.asRepresentation
 import io.bimmergestalt.hassgestalt.hass.EntityRepresentation.Companion.gainControl
 import kotlinx.coroutines.flow.Flow
 import org.json.JSONObject
@@ -48,7 +49,7 @@ class Lovelace(val api: HassApi, val state: StateTracker) {
 
 	fun renderEntities(entities: List<String>): List<Flow<EntityRepresentation>> {
 		return entities.map { name ->
-			state[name].gainControl(api)
+			state[name].asRepresentation().gainControl(api)
 		}
 	}
 

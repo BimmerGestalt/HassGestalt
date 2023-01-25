@@ -5,6 +5,7 @@ import android.graphics.drawable.Drawable
 import android.util.Log
 import io.bimmergestalt.hassgestalt.data.JsonHelpers.forEach
 import io.bimmergestalt.hassgestalt.data.JsonHelpers.map
+import io.bimmergestalt.hassgestalt.hass.EntityRepresentation.Companion.asRepresentation
 import io.bimmergestalt.hassgestalt.hass.EntityRepresentation.Companion.gainControl
 import kotlinx.coroutines.flow.Flow
 import org.json.JSONObject
@@ -53,9 +54,9 @@ class LovelaceDashboard(val cards: List<LovelaceCard>) {
 		cards.forEach { card ->
 			when (card) {
 				is LovelaceCardEntities -> results.addAll(card.entities.map { id ->
-					stateTracker[id].gainControl(hassApi)
+					stateTracker[id].asRepresentation().gainControl(hassApi)
 				})
-				is LovelaceCardSingle -> results.add(stateTracker[card.entityId].gainControl(hassApi))
+				is LovelaceCardSingle -> results.add(stateTracker[card.entityId].asRepresentation().gainControl(hassApi))
 			}
 		}
 		return results

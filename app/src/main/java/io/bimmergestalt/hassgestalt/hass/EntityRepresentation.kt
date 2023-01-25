@@ -12,45 +12,49 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 
-data class EntityRepresentation(val iconName: String, val icon: (Context.() -> Drawable)?,
-                                val entityId: String, val name: String, val state: String,
+data class EntityRepresentation(val iconName: String, val color: Int,
+                                val entityId: String, val name: String, val state: String, val stateText: String,
                                 val actionIcon: Drawable?, val action: (() -> Unit)?,
 ) {
 	companion object {
-		fun fromEntityState(state: EntityState, controller: EntityController?): EntityRepresentation {
-			// figure out the icon
-			val iconName = state.icon()
-			val iconValue = EntityIcon.iconByName(iconName)
-			val iconDrawable: (Context.() -> Drawable)? = if (iconValue != null) {
-				{
-					IconicsDrawable(this, iconValue).apply {
-						style = Paint.Style.FILL_AND_STROKE
-						color = IconicsColor.colorInt(state.color())
-					}
-				}
-			} else { null }
-
-			return EntityRepresentation(state.icon(), iconDrawable,
+		fun fromEntityState(state: EntityState, controller: EntityController? = null): EntityRepresentation {
+			return EntityRepresentation(state.icon(), state.color(),
 				state.entityId, state.label,
-				state.stateText,
+				state.state, state.stateText,
 				controller?.icon, controller)
 		}
 
-		fun Flow<EntityState>.gainControl(hassApi: HassApi): Flow<EntityRepresentation> {
+		fun Flow<EntityState>.asRepresentation(): Flow<EntityRepresentation> = this.map {
+			fromEntityState(it)
+		}
+		fun Flow<EntityRepresentation>.gainControl(hassApi: HassApi): Flow<EntityRepresentation> {
 			val pendingResult = MutableSharedFlow<EntityRepresentation>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
-			val currentState = this.map { state ->
-				val controller = EntityController.create(hassApi, state, pendingResult)
-				fromEntityState(state, controller)
+			val representation = this.map { representation ->
+				val controller = EntityController.create(hassApi, representation, pendingResult)
+				representation.copy(actionIcon = controller?.icon, action = controller)
 			}
-			return merge(currentState, pendingResult)
+			return merge(representation, pendingResult)
 		}
 	}
+
+	val icon: (Context.() -> Drawable)?
+		get() {
+			val iconValue = EntityIcon.iconByName(iconName)
+			return if (iconValue != null) {
+				{
+					IconicsDrawable(this, iconValue).also {
+						it.style = Paint.Style.FILL_AND_STROKE
+						it.color = IconicsColor.colorInt(color)
+					}
+				}
+			} else { null }
+		}
 
 	fun tryClick() {
 		action?.invoke()
 	}
 
 	override fun toString(): String {
-		return "$name $state"
+		return "$name $stateText"
 	}
 }

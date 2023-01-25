@@ -52,7 +52,7 @@ class DashboardListComponent(val scope: CoroutineScope, val listComponent: RHMIC
 					item.icon?.let { iconRenderer.render(it, 46, 46) }
 						?.let { iconRenderer.compress(it, 100) } ?: "",
 					item.name,
-					item.state
+					item.stateText
 				) }
 				.batchDataTables()
 				.collect {
