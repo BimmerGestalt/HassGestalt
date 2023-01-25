@@ -107,6 +107,16 @@ class LovelaceCardEntities(val entities: List<String>, val attributes: Map<Strin
 	override fun toString(): String {
 		return "LovelaceCardEntities($entities)"
 	}
+
+	fun entitiesAttributes(id: String): Map<String, Any?> {
+		return (attributes["entities"] as? List<*>)?.
+			mapNotNull { it as? Map<*, *> }
+			?.firstOrNull { it["entity"] == id }
+			?.filterKeys { it as? String != null }
+			?.mapKeys { it.key as String }
+			?: emptyMap()
+	}
+
 	override fun apply(representation: EntityRepresentation): EntityRepresentation {
 		var output = representation
 		if ((attributes["state_color"] as? Boolean) == true) {
@@ -114,9 +124,20 @@ class LovelaceCardEntities(val entities: List<String>, val attributes: Map<Strin
 				output = output.copy(color = EntityColor.ON)
 			}
 		}
+
+		val entityAttributes = entitiesAttributes(representation.entityId)
+		val forcedName = entityAttributes["name"] as? String
+		val forcedIcon = entityAttributes["icon"] as? String
+		if (forcedName?.isNotBlank() == true) {
+			output = output.copy(name = forcedName)
+		}
+		if (forcedIcon?.isNotBlank() == true) {
+			output = output.copy(iconName = forcedIcon)
+		}
 		return output
 	}
 }
+
 open class LovelaceCardSingle(val entityId: String, val attributes: Map<String, Any?>): LovelaceCard() {
 	override fun toString(): String {
 		return "LovelaceCardSingle($entityId)"
@@ -135,6 +156,7 @@ open class LovelaceCardSingle(val entityId: String, val attributes: Map<String, 
 		return output
 	}
 }
+
 class LovelaceCardGauge(entityId: String, attributes: Map<String, Any?>): LovelaceCardSingle(entityId, attributes) {
 	override fun toString(): String {
 		return "LovelaceCardGauge($entityId)"
