@@ -122,10 +122,10 @@ class LovelaceCardSingle(val entityId: String, val attributes: Map<String, Any?>
 		var output = representation
 		val forcedName = attributes["name"] as? String
 		val forcedIcon = attributes["icon"] as? String
-		if (forcedName != null) {
+		if (forcedName?.isNotBlank() == true) {
 			output = output.copy(name = forcedName)
 		}
-		if (forcedIcon != null) {
+		if (forcedIcon?.isNotBlank() == true) {
 			output = output.copy(iconName = forcedIcon)
 		}
 		return output
