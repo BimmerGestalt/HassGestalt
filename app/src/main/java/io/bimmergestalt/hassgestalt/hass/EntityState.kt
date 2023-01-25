@@ -16,8 +16,8 @@ data class EntityState(
 	}
 
 	val label = attributes["friendly_name"] as? String ?: entityId
-	val stateText = (attributes["raw_state_text"] as? String) ?: state +
-	((attributes["unit_of_measurement"] as? String)?.let { " $it" } ?: "")
+	val stateText = ((attributes["raw_state_text"] as? String) ?: state) +
+	                ((attributes["unit_of_measurement"] as? String)?.let { " $it" } ?: "")
 	val domain = entityId.split('.').first()
 
 	fun icon(): String {
@@ -37,11 +37,11 @@ data class EntityState(
 			adjustColorBrightness(r, g, b, brightness)
 		} else {
 			if (domain == "light" && state == "on") {
-				adjustColorBrightness(0xfd, 0xd8, 0x35, attributes["brightness"] as? Int)
+				adjustColorBrightness(EntityColor.ON_R, EntityColor.ON_G, EntityColor.ON_B, attributes["brightness"] as? Int)
 			} else if (state == "unavailable") {
-				Color.parseColor("#6f6f6f")
+				EntityColor.UNAVAIL
 			} else {
-				Color.parseColor("#44739e")
+				EntityColor.OFF
 			}
 		}
 	}
