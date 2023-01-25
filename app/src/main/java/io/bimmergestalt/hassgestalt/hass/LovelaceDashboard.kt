@@ -1,6 +1,7 @@
 package io.bimmergestalt.hassgestalt.hass
 
 import android.content.Context
+import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.util.Log
 import io.bimmergestalt.hassgestalt.data.JsonHelpers.forEach
@@ -75,6 +76,9 @@ sealed class LovelaceCard {
 			val type = data.optString("type")
 			return when {
 				type == "map" -> null       // doesn't translate well to a text string
+				data.has("entity") && data.optString("type") == "gauge" -> {
+					LovelaceCardGauge(data.optString("entity"), data.toMap())
+				}
 				data.has("entity") -> {
 					LovelaceCardSingle(data.optString("entity"), data.toMap())
 				}
@@ -113,7 +117,7 @@ class LovelaceCardEntities(val entities: List<String>, val attributes: Map<Strin
 		return output
 	}
 }
-class LovelaceCardSingle(val entityId: String, val attributes: Map<String, Any?>): LovelaceCard() {
+open class LovelaceCardSingle(val entityId: String, val attributes: Map<String, Any?>): LovelaceCard() {
 	override fun toString(): String {
 		return "LovelaceCardSingle($entityId)"
 	}
@@ -127,6 +131,69 @@ class LovelaceCardSingle(val entityId: String, val attributes: Map<String, Any?>
 		}
 		if (forcedIcon?.isNotBlank() == true) {
 			output = output.copy(iconName = forcedIcon)
+		}
+		return output
+	}
+}
+class LovelaceCardGauge(entityId: String, attributes: Map<String, Any?>): LovelaceCardSingle(entityId, attributes) {
+	override fun toString(): String {
+		return "LovelaceCardGauge($entityId)"
+	}
+
+	data class SegmentBandConfig(val from: Int, val color: Int, val label: String?) {
+		companion object {
+			fun fromMap(input: Map<*, *>): SegmentBandConfig? {
+				val from = input["from"] as? Int
+				val color = (input["color"] as? String)?.let { try {
+					Color.parseColor(it)
+				} catch (_: Exception) { null } }
+				val label = input["label"] as? String
+				return if (from != null && color != null) {
+					SegmentBandConfig(from, color, label)
+				} else {
+					null
+				}
+			}
+		}
+	}
+
+	fun <T> bandValues(value: Int, bands: Map<Int, T>): T? {
+		val band = bands.keys.sorted().firstOrNull { it < value }
+		return bands[band]
+	}
+
+	override fun apply(representation: EntityRepresentation): EntityRepresentation {
+		var output = representation
+		val forcedName = attributes["name"] as? String
+		if (forcedName != null) {
+			output = output.copy(name = forcedName)
+		}
+		val value = representation.state.toIntOrNull()
+
+		val severityDefs = attributes["severity"] as? Map<*, *>
+		if (value != null && severityDefs != null) {
+			val severityBands = severityDefs.mapNotNull { entry ->
+				val color = EntityColor.GAUGE_COLORS[entry.key]
+				val bandValue = entry.value as? Int
+				if (color != null && bandValue != null) {
+					Pair(bandValue, color)
+				} else { null }
+			}.toMap()
+			val forcedColor = bandValues(value, severityBands) ?: EntityColor.GAUGE_COLORS["min"]!!
+			output = output.copy(color = forcedColor)
+		}
+
+		val segmentDefs = attributes["segments"] as? List<*>
+		if (value != null && segmentDefs != null) {
+			val segmentBands = segmentDefs.mapNotNull { entry ->
+				(entry as? Map<*, *>)?.let { SegmentBandConfig.fromMap(entry) }
+			}.associateBy { it.from }
+			val band = bandValues(value, segmentBands)
+			val forcedColor = band?.color ?: EntityColor.GAUGE_COLORS["min"]!!
+			output = output.copy(color = forcedColor)
+			if (band?.label != null) {
+				output = output.copy(stateText = band.label)
+			}
 		}
 		return output
 	}
