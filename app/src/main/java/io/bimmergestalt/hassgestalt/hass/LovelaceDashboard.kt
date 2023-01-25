@@ -5,9 +5,11 @@ import android.graphics.drawable.Drawable
 import android.util.Log
 import io.bimmergestalt.hassgestalt.data.JsonHelpers.forEach
 import io.bimmergestalt.hassgestalt.data.JsonHelpers.map
+import io.bimmergestalt.hassgestalt.data.JsonHelpers.toMap
 import io.bimmergestalt.hassgestalt.hass.EntityRepresentation.Companion.asRepresentation
 import io.bimmergestalt.hassgestalt.hass.EntityRepresentation.Companion.gainControl
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import org.json.JSONObject
 import java.util.ArrayList
 
@@ -54,9 +56,9 @@ class LovelaceDashboard(val cards: List<LovelaceCard>) {
 		cards.forEach { card ->
 			when (card) {
 				is LovelaceCardEntities -> results.addAll(card.entities.map { id ->
-					stateTracker[id].asRepresentation().gainControl(hassApi)
+					stateTracker[id].asRepresentation().map{card.apply(it)}.gainControl(hassApi)
 				})
-				is LovelaceCardSingle -> results.add(stateTracker[card.entityId].asRepresentation().gainControl(hassApi))
+				is LovelaceCardSingle -> results.add(stateTracker[card.entityId].asRepresentation().map{card.apply(it)}.gainControl(hassApi))
 			}
 		}
 		return results
@@ -74,7 +76,7 @@ sealed class LovelaceCard {
 			return when {
 				type == "map" -> null       // doesn't translate well to a text string
 				data.has("entity") -> {
-					LovelaceCardSingle(data.optString("entity"))
+					LovelaceCardSingle(data.optString("entity"), data.toMap())
 				}
 				data.optJSONArray("entities") != null -> {
 					LovelaceCardEntities(data.optJSONArray("entities")?.map {
@@ -85,21 +87,47 @@ sealed class LovelaceCard {
 							is String -> it
 							else -> null
 						}
-					}?.filterNotNull() ?: emptyList())
+					}?.filterNotNull() ?: emptyList(), data.toMap())
 				}
 				else -> null
 			}
 		}
 	}
+
+	open fun apply(representation: EntityRepresentation): EntityRepresentation {
+		return representation
+	}
 }
 
-class LovelaceCardEntities(val entities: List<String>): LovelaceCard() {
+class LovelaceCardEntities(val entities: List<String>, val attributes: Map<String, Any?>): LovelaceCard() {
 	override fun toString(): String {
 		return "LovelaceCardEntities($entities)"
 	}
+	override fun apply(representation: EntityRepresentation): EntityRepresentation {
+		var output = representation
+		if ((attributes["state_color"] as? Boolean) == true) {
+			if (representation.color == EntityColor.OFF && representation.state == "on") {
+				output = output.copy(color = EntityColor.ON)
+			}
+		}
+		return output
+	}
 }
-class LovelaceCardSingle(val entityId: String): LovelaceCard() {
+class LovelaceCardSingle(val entityId: String, val attributes: Map<String, Any?>): LovelaceCard() {
 	override fun toString(): String {
 		return "LovelaceCardSingle($entityId)"
+	}
+
+	override fun apply(representation: EntityRepresentation): EntityRepresentation {
+		var output = representation
+		val forcedName = attributes["name"] as? String
+		val forcedIcon = attributes["icon"] as? String
+		if (forcedName != null) {
+			output = output.copy(name = forcedName)
+		}
+		if (forcedIcon != null) {
+			output = output.copy(iconName = forcedIcon)
+		}
+		return output
 	}
 }
