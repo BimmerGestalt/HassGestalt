@@ -1,11 +1,11 @@
 package io.bimmergestalt.hassgestalt
 
 import com.nhaarman.mockito_kotlin.*
+import io.bimmergestalt.hassgestalt.hass.EntityState
 import io.bimmergestalt.hassgestalt.hass.HassApi
 import io.bimmergestalt.hassgestalt.hass.StateTracker
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -46,7 +46,7 @@ class StateTrackerTest {
 			subscriptions[0].emit(event("sensor.test", "on"))
 			println("Successful post")
 		}
-		val result = subject["sensor.test"].first()
+		val result = subject["sensor.test"].take(2).last()
 		assertEquals("sensor.test", result.entityId)
 		assertEquals("on", result.state)
 		assertEquals("on", subject.lastState["sensor.test"]?.state)
@@ -64,7 +64,7 @@ class StateTrackerTest {
 		assertEquals(1, subscriptions.size)
 
 		val job = launch {
-			val result = subject["sensor.test"].first()
+			val result = subject["sensor.test"].take(2).last()
 			assertEquals("sensor.test", result.entityId)
 			assertEquals("on", result.state)
 			assertEquals("on", subject.lastState["sensor.test"]?.state)
@@ -84,7 +84,7 @@ class StateTrackerTest {
 		subject.subscribeAll()
 		assertEquals(1, subscriptions.size)
 		val job = launch {
-			val result = subject["sensor.test"].first()
+			val result = subject["sensor.test"].take(3).last()
 			assertEquals("sensor.test", result.entityId)
 			assertEquals("on", result.state)
 			assertEquals("on", subject.lastState["sensor.test"]?.state)
@@ -112,7 +112,10 @@ class StateTrackerTest {
 	fun testStateSwitchesToAll() = runTest(dispatchTimeoutMs = 1000L) {
 		val subject = StateTracker(this, api)
 		val job = launch {
-			val result = subject["sensor.test"].first()
+			val results: List<EntityState> = subject["sensor.test"].take(3).toList()
+			assertEquals("", results[0].state)  // placeholders
+			assertEquals("", results[1].state)
+			val result: EntityState = results[2]
 			assertEquals("sensor.test", result.entityId)
 			assertEquals("on", result.state)
 			assertEquals("on", subject.lastState["sensor.test"]?.state)
@@ -135,7 +138,7 @@ class StateTrackerTest {
 	fun testUnsubscribe() = runTest(dispatchTimeoutMs = 1000L) {
 		val subject = StateTracker(this, api)
 		val job = launch {
-			val result = subject["sensor.test"].first()
+			val result = subject["sensor.test"].take(2).last()
 			assertEquals("sensor.test", result.entityId)
 			assertEquals("on", result.state)
 			assertEquals("on", subject.lastState["sensor.test"]?.state)
