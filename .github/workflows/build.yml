@@ -29,6 +29,8 @@ jobs:
         uses: gradle/wrapper-validation-action@v1
       - name: Build the project
         run: ./gradlew assembleDebug
+      - name: Run tests
+        run: ./gradlew testDebugUnitTest
       - name: Upload APKs
         uses: actions/upload-artifact@v2
         with:
