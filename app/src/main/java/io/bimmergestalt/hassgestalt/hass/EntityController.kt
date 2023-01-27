@@ -11,6 +11,7 @@ class EntityController(val hassApi: HassApi, val entityRepresentation: EntityRep
 			val domain = entityRepresentation.entityId.split('.').first()
 			// only support some types
 			return if (domain == "alarm_control_panel" ||
+				domain == "automation" ||
 				domain == "group" ||
 				domain == "button" ||
 				domain == "input_button" ||
@@ -31,6 +32,7 @@ class EntityController(val hassApi: HassApi, val entityRepresentation: EntityRep
 		val domain = entityRepresentation.entityId.split('.').first()
 		val service = when(domain) {
 			"alarm_control_panel" -> if (entityRepresentation.state == "disarmed") "alarm_arm_away" else "alarm_disarm"
+			"automation" -> "toggle"
 			"group" -> "toggle"
 			"button" -> "press"
 			"input_button" -> "press"
