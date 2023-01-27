@@ -14,26 +14,31 @@ import kotlinx.coroutines.flow.merge
 
 data class EntityRepresentation(val iconName: String, val color: Int,
                                 val entityId: String, val name: String, val state: String, val stateText: String,
-                                val actionIcon: Drawable?, val action: (() -> Unit)?,
+                                val action: (() -> Unit)?,
 ) {
 	companion object {
-		fun fromEntityState(state: EntityState, controller: EntityController? = null): EntityRepresentation {
+		fun fromEntityState(state: EntityState): EntityRepresentation {
 			return EntityRepresentation(state.icon(), state.color(),
 				state.entityId, state.label,
-				state.state, state.stateText,
-				controller?.icon, controller)
+				state.state, state.stateText, null)
 		}
 
 		fun Flow<EntityState>.asRepresentation(): Flow<EntityRepresentation> = this.map {
 			fromEntityState(it)
 		}
 		fun Flow<EntityRepresentation>.gainControl(hassApi: HassApi): Flow<EntityRepresentation> {
-			val pendingResult = MutableSharedFlow<EntityRepresentation>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+			val controller = EntityController(hassApi)
 			val representation = this.map { representation ->
-				val controller = EntityController.create(hassApi, representation, pendingResult)
-				representation.copy(actionIcon = controller?.icon, action = controller)
+				representation.copy(action = controller.toggle(representation))
 			}
-			return merge(representation, pendingResult)
+			return merge(representation, controller.pendingResult)
+		}
+		fun Flow<EntityRepresentation>.gainControl(hassApi: HassApi, domain: String, service: String, target: Map<String, Any?>, args: Map<String, Any?>): Flow<EntityRepresentation> {
+			val controller = EntityController(hassApi)
+			val representation = this.map { representation ->
+				representation.copy(action = controller.callService(representation, domain, service, target, args))
+			}
+			return merge(representation, controller.pendingResult)
 		}
 	}
 

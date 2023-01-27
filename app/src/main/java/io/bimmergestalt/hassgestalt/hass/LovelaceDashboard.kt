@@ -56,6 +56,7 @@ class LovelaceDashboard(val cards: List<LovelaceCard>) {
 		val results = ArrayList<Flow<EntityRepresentation>>()
 		cards.forEach { card ->
 			when (card) {
+				is LovelaceCardAction -> results.add(stateTracker[card.entityId].asRepresentation().map{card.apply(it)}.gainActionCardControl(card, hassApi))
 				is LovelaceCardEntities -> results.addAll(card.entities.map { id ->
 					stateTracker[id].asRepresentation().map{card.apply(it)}.gainControl(hassApi)
 				})
@@ -76,6 +77,9 @@ sealed class LovelaceCard {
 			val type = data.optString("type")
 			return when {
 				type == "map" -> null       // doesn't translate well to a text string
+				data.has("entity") && data.optString("type") == "button" -> {
+					LovelaceCardAction(data.optString("entity"), data.toMap())
+				}
 				data.has("entity") && data.optString("type") == "gauge" -> {
 					LovelaceCardGauge(data.optString("entity"), data.toMap())
 				}
@@ -105,7 +109,7 @@ sealed class LovelaceCard {
 
 class LovelaceCardEntities(val entities: List<String>, val attributes: Map<String, Any?>): LovelaceCard() {
 	override fun toString(): String {
-		return "LovelaceCardEntities($entities)"
+		return "LovelaceCardEntities($entities, $attributes)"
 	}
 
 	fun entitiesAttributes(id: String): Map<String, Any?> {
@@ -140,7 +144,7 @@ class LovelaceCardEntities(val entities: List<String>, val attributes: Map<Strin
 
 open class LovelaceCardSingle(val entityId: String, val attributes: Map<String, Any?>): LovelaceCard() {
 	override fun toString(): String {
-		return "LovelaceCardSingle($entityId)"
+		return "LovelaceCardSingle($entityId, $attributes)"
 	}
 
 	override fun apply(representation: EntityRepresentation): EntityRepresentation {
@@ -157,9 +161,35 @@ open class LovelaceCardSingle(val entityId: String, val attributes: Map<String, 
 	}
 }
 
+class LovelaceCardAction(entityId: String, attributes: Map<String, Any?>): LovelaceCardSingle(entityId, attributes) {
+	override fun toString(): String {
+		return "LovelaceCardButton($entityId, $attributes)"
+	}
+	fun gainControl(representations: Flow<EntityRepresentation>, hassApi: HassApi): Flow<EntityRepresentation> {
+		val tapAction = (attributes["tap_action"] as? Map<*,*>)?.get("action") as? String
+		if (tapAction == null || tapAction == "toggle") {
+			return representations.gainControl(hassApi)
+		}
+		if (tapAction == "call-service") {
+			val service = (attributes["tap_action"] as? Map<*,*>)?.get("service") as? String
+			val split = service?.split('.', limit = 2)
+			val target = ((attributes["tap_action"] as? Map<*,*>)?.get("target") as? Map<*, *>)
+				?.filterKeys { it as? String != null }?.mapKeys { it.key as String } ?: emptyMap()
+			val data = ((attributes["tap_action"] as? Map<*,*>)?.get("data") as? Map<*, *>)
+				?.filterKeys { it as? String != null }?.mapKeys { it.key as String } ?: emptyMap()
+			if (split?.size == 2) {
+				return representations.gainControl(hassApi, split[0], split[1], target, data)
+			}
+		}
+		return representations
+	}
+}
+fun Flow<EntityRepresentation>.gainActionCardControl(buttonCard: LovelaceCardAction, hassApi: HassApi): Flow<EntityRepresentation> =
+	buttonCard.gainControl(this, hassApi)
+
 class LovelaceCardGauge(entityId: String, attributes: Map<String, Any?>): LovelaceCardSingle(entityId, attributes) {
 	override fun toString(): String {
-		return "LovelaceCardGauge($entityId)"
+		return "LovelaceCardGauge($entityId, $attributes)"
 	}
 
 	data class SegmentBandConfig(val from: Int, val color: Int, val label: String?) {
