@@ -14,7 +14,7 @@ repositories {
 def isRunningOnCI = System.getenv("CI") == "true"
 
 android {
-    compileSdkVersion 31
+    compileSdkVersion 33
     buildToolsVersion "30.0.2"
 
     androidGitVersion {
@@ -30,7 +30,7 @@ android {
     defaultConfig {
         applicationId "io.bimmergestalt.hassgestalt"
         minSdkVersion 21
-        targetSdkVersion 31
+        targetSdkVersion 33
         versionCode androidGitVersion.code() + 1
         versionName androidGitVersion.name()
 
