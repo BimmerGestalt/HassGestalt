@@ -1,10 +1,11 @@
 package io.bimmergestalt.hassgestalt.hass
 
+import kotlinx.coroutines.Deferred
 import org.json.JSONObject
 import java.lang.AssertionError
 
 class EntityController(val hassApi: HassApi) {
-	fun toggle(entityId: String, state: String): (()->Unit)? {
+	fun toggle(entityId: String, state: String): (()->Deferred<JSONObject>)? {
 		val domain = entityId.split('.').first()
 		// only support some types
 		return if (domain == "alarm_control_panel" ||
@@ -35,7 +36,7 @@ class EntityController(val hassApi: HassApi) {
 		}
 	}
 
-	fun callService(domain: String, service: String, target: Map<String, Any?>, data: Map<String, Any?> = emptyMap()): ()->Unit {
+	fun callService(domain: String, service: String, target: Map<String, Any?>, data: Map<String, Any?> = emptyMap()): ()->Deferred<JSONObject> {
 		return {
 			hassApi.request(JSONObject().apply {
 				put("type", "call_service")

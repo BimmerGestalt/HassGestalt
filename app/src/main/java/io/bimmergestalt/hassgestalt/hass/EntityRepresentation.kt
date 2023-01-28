@@ -9,6 +9,7 @@ import com.mikepenz.iconics.utils.color
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.*
+import org.json.JSONObject
 
 data class EntityRepresentation(val iconName: String, val color: Int,
                                 val entityId: String, val name: String, val state: String, val stateText: String,
@@ -44,7 +45,7 @@ data class EntityRepresentation(val iconName: String, val color: Int,
 				addClickHandler(representation, command)
 			}
 		}
-		private fun addClickHandler(representation: EntityRepresentation, command: () -> Unit): Flow<EntityRepresentation> {
+		private fun addClickHandler(representation: EntityRepresentation, command: () -> Deferred<JSONObject>): Flow<EntityRepresentation> {
 			return channelFlow {
 				val clickInput = MutableSharedFlow<Boolean>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 				val action: ()->Unit = { clickInput.tryEmit(true) }
@@ -53,11 +54,19 @@ data class EntityRepresentation(val iconName: String, val color: Int,
 				send(output)
 
 				// wait for clicks and send updated answers
-				// the delay will be cancelled by flatMapLatest if the original Representation is updated
+				// the coroutine will be cancelled by flatMapLatest if the original Representation is updated
 				clickInput.collectLatest {
 					send(representation.copy(stateText = "..."))
-					command.invoke()
-					delay(3000)
+					try {
+						withTimeout(5000) {
+							// run the command and wait for it to finish
+							command.invoke().await()
+							// wait this long for the EntityState to update from the server
+							// an update will cancel this coroutine and show the new state
+							delay(2500)
+						}
+					} catch (_: TimeoutCancellationException) { }
+					// if we didn't get cancelled, show the original state to clear the ellipses
 					send(output)
 				}
 			}
