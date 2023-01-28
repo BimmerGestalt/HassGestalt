@@ -29,7 +29,7 @@
             android:layout_height="wrap_content"
             android:paddingStart="8dp"
             android:paddingEnd="8dp"
-            android:text="@{entityRepresentation.state}" />
+            android:text="@{entityRepresentation.stateText}" />
         <Button
             android:layout_width="48dp"
             android:layout_height="48dp"
