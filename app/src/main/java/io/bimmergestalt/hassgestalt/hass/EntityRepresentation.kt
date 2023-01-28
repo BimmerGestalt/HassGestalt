@@ -6,11 +6,9 @@ import android.graphics.drawable.Drawable
 import com.mikepenz.iconics.IconicsColor
 import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.utils.color
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.*
 
 data class EntityRepresentation(val iconName: String, val color: Int,
                                 val entityId: String, val name: String, val state: String, val stateText: String,
@@ -26,19 +24,43 @@ data class EntityRepresentation(val iconName: String, val color: Int,
 		fun Flow<EntityState>.asRepresentation(): Flow<EntityRepresentation> = this.map {
 			fromEntityState(it)
 		}
+		@OptIn(ExperimentalCoroutinesApi::class)
 		fun Flow<EntityRepresentation>.gainControl(hassApi: HassApi): Flow<EntityRepresentation> {
 			val controller = EntityController(hassApi)
-			val representation = this.map { representation ->
-				representation.copy(action = controller.toggle(representation))
+			return this.flatMapLatest { representation ->
+				val command = controller.toggle(representation.entityId, representation.state)
+				if (command != null) {
+					addClickHandler(representation, command)
+				} else {
+					flowOf(representation)
+				}
 			}
-			return merge(representation, controller.pendingResult)
 		}
+		@OptIn(ExperimentalCoroutinesApi::class)
 		fun Flow<EntityRepresentation>.gainControl(hassApi: HassApi, domain: String, service: String, target: Map<String, Any?>, args: Map<String, Any?>): Flow<EntityRepresentation> {
 			val controller = EntityController(hassApi)
-			val representation = this.map { representation ->
-				representation.copy(action = controller.callService(representation, domain, service, target, args))
+			val command = controller.callService(domain, service, target, args)
+			return this.flatMapLatest { representation ->
+				addClickHandler(representation, command)
 			}
-			return merge(representation, controller.pendingResult)
+		}
+		private fun addClickHandler(representation: EntityRepresentation, command: () -> Unit): Flow<EntityRepresentation> {
+			return channelFlow {
+				val clickInput = MutableSharedFlow<Boolean>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+				val action: ()->Unit = { clickInput.tryEmit(true) }
+				// send the new EntityRepresentation with our click handler attached
+				val output = representation.copy(action=action)
+				send(output)
+
+				// wait for clicks and send updated answers
+				// the delay will be cancelled by flatMapLatest if the original Representation is updated
+				clickInput.collectLatest {
+					send(representation.copy(stateText = "..."))
+					command.invoke()
+					delay(3000)
+					send(output)
+				}
+			}
 		}
 	}
 

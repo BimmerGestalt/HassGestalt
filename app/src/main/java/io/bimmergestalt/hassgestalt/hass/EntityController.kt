@@ -1,15 +1,11 @@
 package io.bimmergestalt.hassgestalt.hass
 
-import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import org.json.JSONObject
 import java.lang.AssertionError
 
 class EntityController(val hassApi: HassApi) {
-	val pendingResult = MutableSharedFlow<EntityRepresentation>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
-
-	fun toggle(entityRepresentation: EntityRepresentation): (()->Unit)? {
-		val domain = entityRepresentation.entityId.split('.').first()
+	fun toggle(entityId: String, state: String): (()->Unit)? {
+		val domain = entityId.split('.').first()
 		// only support some types
 		return if (domain == "alarm_control_panel" ||
 			domain == "automation" ||
@@ -22,27 +18,25 @@ class EntityController(val hassApi: HassApi) {
 			domain == "switch") {
 			val commandDomain = if (domain == "group") "homeassistant" else domain
 			val service = when(domain) {
-				"alarm_control_panel" -> if (entityRepresentation.state == "disarmed") "alarm_arm_away" else "alarm_disarm"
+				"alarm_control_panel" -> if (state == "disarmed") "alarm_arm_away" else "alarm_disarm"
 				"automation" -> "toggle"
 				"group" -> "toggle"
 				"button" -> "press"
 				"input_button" -> "press"
 				"fan" -> "toggle"
 				"light" -> "toggle"
-				"lock" -> if (entityRepresentation.state == "locked") "unlock" else "lock"
+				"lock" -> if (state == "locked") "unlock" else "lock"
 				"switch" -> "toggle"
-				else -> throw AssertionError("Unknown domain type $domain for entity ${entityRepresentation.entityId}")
+				else -> throw AssertionError("Unknown domain type $domain for entity ${entityId}")
 			}
-			callService(entityRepresentation, commandDomain, service, mapOf("entity_id" to entityRepresentation.entityId))
+			callService(commandDomain, service, mapOf("entity_id" to entityId))
 		} else {
 			null
 		}
 	}
 
-	fun callService(entityRepresentation: EntityRepresentation, domain: String, service: String, target: Map<String, Any?>, data: Map<String, Any?> = emptyMap()): ()->Unit {
+	fun callService(domain: String, service: String, target: Map<String, Any?>, data: Map<String, Any?> = emptyMap()): ()->Unit {
 		return {
-//			println("call_service ($domain.$service) on $target $data")
-			pendingResult.tryEmit(entityRepresentation.copy(stateText = "..."))
 			hassApi.request(JSONObject().apply {
 				put("type", "call_service")
 				put("domain", domain)
