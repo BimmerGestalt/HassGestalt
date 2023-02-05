@@ -8,6 +8,29 @@ import org.junit.Test
 
 class LovelaceDashboardTest {
 	@Test
+	fun testHiddenEntity() {
+		val json = JSONObject("""
+			{"type":"entity","entity":"lock.front_door_lock","hass_gestalt":false}
+		""".trimIndent())
+		val lovelace = LovelaceCard.parse(json)
+		assertNull(lovelace)
+	}
+	@Test
+	fun testHiddenEntities() {
+		val json = JSONObject("""
+			{"type":"entities","entities":[
+			  {"entity":"lock.front_door_lock","hass_gestalt":false},
+			  {"entity":"lock.garage_door_lock"}
+			]}
+		""".trimIndent())
+		val lovelace = LovelaceCard.parse(json)
+		assertTrue(lovelace is LovelaceCardEntities)
+		lovelace as LovelaceCardEntities
+		assertEquals(1, lovelace.entities.size)
+		assertEquals("lock.garage_door_lock", lovelace.entities[0].entityId)
+	}
+
+	@Test
 	fun testButtonCardSimple() {
 		val json = JSONObject("""{
 			"type": "button",

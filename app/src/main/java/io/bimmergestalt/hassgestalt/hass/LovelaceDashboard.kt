@@ -75,6 +75,7 @@ sealed class LovelaceCard {
 			Log.d(TAG, "Parsing lovelace card $data")
 			val type = data.optString("type")
 			return when {
+				!data.optBoolean("hass_gestalt", true) -> null   // custom attribute to hide an entity
 				type == "map" -> null       // doesn't translate well to a text string
 				data.has("entity") && data.optString("type") == "gauge" -> {
 					LovelaceCardGauge(data.optString("entity"), data.toMap())
@@ -87,13 +88,18 @@ sealed class LovelaceCard {
 					LovelaceCardEntities(data.optJSONArray("entities")?.map {
 						// statistics-graph just has a list of strings
 						// but most others have a list of objects
-						val entityData = cardData.toMutableMap() + when (it) {
+						val entityData = when (it) {
 							is JSONObject -> it.toMap()
 							is String -> mapOf("entity" to it)
-							else -> emptyMap()
+							else -> null
 						}
-						LovelaceCardEntity((entityData["entity"] as? String) ?: "", entityData)
-					} ?: emptyList())
+						if (entityData?.get("hass_gestalt") == false) {
+							return@map null
+						}
+						entityData?.let {
+							LovelaceCardEntity((entityData["entity"] as? String) ?: "", cardData + entityData)
+						}
+					}?.filterNotNull() ?: emptyList())
 				}
 				else -> null
 			}
