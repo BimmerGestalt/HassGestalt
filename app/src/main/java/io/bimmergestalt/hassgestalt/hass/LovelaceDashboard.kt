@@ -180,15 +180,19 @@ class LovelaceCardGauge(entityId: String, attributes: Map<String, Any?>): Lovela
 		}
 	}
 
-	fun <T> bandValues(value: Int, bands: Map<Int, T>): T? {
-		val band = bands.keys.sorted().firstOrNull { it < value }
+	fun <T> bandValues(value: Float, bands: Map<Int, T>): T? {
+		val band = bands.keys.sorted().lastOrNull { it <= value }
 		return bands[band]
 	}
 
 	override fun apply(representation: EntityRepresentation): EntityRepresentation {
 		var output = super.apply(representation)
 
-		val value = representation.state.toIntOrNull()
+		val value = representation.state.toFloatOrNull()
+		val forcedUnit = attributes["unit"]
+		if (value != null && forcedUnit != null) {
+			output = output.copy(stateText = "${representation.state} $forcedUnit")
+		}
 
 		val severityDefs = attributes["severity"] as? Map<*, *>
 		if (value != null && severityDefs != null) {
