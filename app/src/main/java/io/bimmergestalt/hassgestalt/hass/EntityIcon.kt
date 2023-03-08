@@ -51,7 +51,7 @@ object EntityIcon {
 				"bluetooth", "bluetooth_le" -> if (state == "home") "mdi:bluetooth-connect" else "mdi:bluetooth"
 				else -> if (state == "home") "mdi:account" else "mdi:account-arrow-right"
 			}
-			"fan" -> "mdi:fan"
+			"fan" -> if (state == "on") "mdi:fan" else "mdi:fan-off"
 			"group" -> "mdi:google-circles-communities"
 			"humidifier" -> if (state == "on") "mdi:air-humidifier" else "mdi:air-humidifier-off"
 			"input_boolean" -> if (state == "on") "mdi:check-circle-outline" else "mdi:close-circle-outline"
