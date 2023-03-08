@@ -137,6 +137,9 @@ open class LovelaceCardEntity(val entityId: String, val attributes: Map<String, 
 		if (stateColor && representation.color == EntityColor.OFF && representation.state == "on") {
 			output = output.copy(color = EntityColor.ON)
 		}
+		if (stateColor && representation.color == EntityColor.OFF && representation.state == "on" && representation.entityId.startsWith("fan.")) {
+			output = output.copy(color = EntityColor.ON_FAN)
+		}
 		return output
 	}
 

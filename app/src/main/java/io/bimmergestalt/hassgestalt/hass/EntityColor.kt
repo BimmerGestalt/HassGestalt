@@ -5,6 +5,7 @@ import android.graphics.Color
 object EntityColor {
 	val OFF = Color.parseColor("#44739e")
 	val ON = Color.parseColor("#fdd835")
+	val ON_FAN = Color.parseColor("#00bcd4")
 	val UNAVAIL = Color.parseColor("#6f6f6f")
 	val ON_R = 0xfd
 	val ON_G = 0xd8
