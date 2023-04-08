@@ -10,6 +10,7 @@ class EntityController(val hassApi: HassApi) {
 		// only support some types
 		return if (domain == "alarm_control_panel" ||
 			domain == "automation" ||
+			domain == "cover" ||
 			domain == "group" ||
 			domain == "button" ||
 			domain == "input_button" ||
@@ -21,6 +22,7 @@ class EntityController(val hassApi: HassApi) {
 			val service = when(domain) {
 				"alarm_control_panel" -> if (state == "disarmed") "alarm_arm_away" else "alarm_disarm"
 				"automation" -> "toggle"
+				"cover" -> "toggle"
 				"group" -> "toggle"
 				"button" -> "press"
 				"input_button" -> "press"
@@ -28,7 +30,7 @@ class EntityController(val hassApi: HassApi) {
 				"light" -> "toggle"
 				"lock" -> if (state == "locked") "unlock" else "lock"
 				"switch" -> "toggle"
-				else -> throw AssertionError("Unknown domain type $domain for entity ${entityId}")
+				else -> throw AssertionError("Unknown domain type $domain for entity $entityId")
 			}
 			callService(commandDomain, service, mapOf("entity_id" to entityId))
 		} else {
