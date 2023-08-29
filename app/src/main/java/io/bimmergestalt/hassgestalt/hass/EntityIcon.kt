@@ -102,7 +102,7 @@ object EntityIcon {
 				"opening" -> "mdi:arrow-up-box"
 				"closing" -> "mdi:arrow-down-box"
 				"closed" -> "mdi:garage"
-				"off" -> "mdi-garage"
+				"off" -> "mdi:garage"
 				else -> "mdi:garage-open"
 			}
 			"gate" -> when(state) {
