@@ -18,3 +18,10 @@ direct port forwarding, or through a VPN. With some custom authentication gatewa
   - The `/auth/authorize` page must be accessible from a web browser on your phone, which means it is able to support extra authentication challenges such as 2FA or Social Auth.
   - The `/auth/token` OAuth Endpoint must be accessible directly
   - The `/api/websocket` API must be accessible directly  (The Login button in the phone interface appears after verifying this API is reachable)
+
+Privacy
+-------
+
+This project does not collect any personal and sensitive user data.
+It doesn't even have any crash reporting or telemetry.
+It only stores an access token for the Home Assistant API.
