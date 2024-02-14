@@ -1,13 +1,16 @@
 package io.bimmergestalt.hassgestalt.phoneui
 
 import android.net.Uri
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import androidx.lifecycle.lifecycleScope
+import androidx.fragment.app.FragmentActivity
 import io.bimmergestalt.hassgestalt.R
 import io.bimmergestalt.hassgestalt.hass.StateTracker
 import io.bimmergestalt.hassgestalt.data.ServerConfig
 import io.bimmergestalt.hassgestalt.hass.HassApiConnection
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.json.JSONObject
@@ -15,8 +18,10 @@ import java.io.InputStream
 import java.net.URL
 import java.nio.charset.Charset
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : FragmentActivity() {
 	val serverConfig = ServerConfig()
+
+	private val coroutineScope = CoroutineScope(Job() + Dispatchers.IO)
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -52,7 +57,7 @@ class MainActivity : AppCompatActivity() {
 	}
 
 	fun tryWebsocket() {
-		lifecycleScope.launch {
+		coroutineScope.launch {
 			val apiFlow = HassApiConnection.create(serverConfig.serverName, serverConfig.authState!!).connect()
 			apiFlow.collectLatest { api ->
 				if (api != null) {
@@ -69,9 +74,14 @@ class MainActivity : AppCompatActivity() {
 					println("States: ${states.await()}")
 					println("Panels: ${panels.await()}")
 					println("Cooper Panel: ${panelConfig.await()}")
-					val state = StateTracker(lifecycleScope, api)
+					val state = StateTracker(coroutineScope, api)
 				}
 			}
 		}
+	}
+
+	override fun onPause() {
+		super.onPause()
+		coroutineScope.coroutineContext.cancelChildren()
 	}
 }
