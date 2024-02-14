@@ -3,12 +3,8 @@ def RHMISources = [
         "Smartthings": [
                 "com.smartthings.android/com.smartthings.android.p7b": "smartthings/smartthings.p7b",
                 "com.smartthings.android/rhmi/ui_description.xml": "smartthings/rhmi/ui_description.xml",
-                "com.smartthings.android/rhmi/bmw/images.zip": "smartthings/rhmi/bmw/images.zip",
-                "com.smartthings.android/rhmi/bmw/texts.zip": "smartthings/rhmi/bmw/texts.zip",
                 "com.smartthings.android/rhmi/common/images.zip": "smartthings/rhmi/common/images.zip",
                 "com.smartthings.android/rhmi/common/texts.zip": "smartthings/rhmi/common/texts.zip",
-                "com.smartthings.android/rhmi/mini/images.zip": "smartthings/rhmi/mini/images.zip",
-                "com.smartthings.android/rhmi/mini/texts.zip": "smartthings/rhmi/mini/texts.zip",
         ]
 ]
 
