@@ -11,6 +11,7 @@ repositories {
     maven { url 'https://jitpack.io' }
 }
 
+def runProguardInDebug = false
 def isRunningOnCI = System.getenv("CI") == "true"
 
 android {
@@ -57,9 +58,23 @@ android {
     }
     buildTypes {
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            postprocessing {
+                removeUnusedCode true
+                obfuscate false
+                optimizeCode true
+                proguardFile 'proguard-rules.pro'
+            }
             signingConfig signingConfigs.release
+        }
+        debug {
+            if (runProguardInDebug || isRunningOnCI) {        // make sure to run tests against minified code in CI, but local dev can be fast
+                postprocessing {
+                    removeUnusedCode true
+                    obfuscate false
+                    optimizeCode true
+                    proguardFile 'proguard-rules.pro'
+                }
+            }
         }
     }
     compileOptions {
@@ -105,8 +120,8 @@ dependencies {
     implementation 'net.openid:appauth:0.10.0'
     implementation "org.java-websocket:Java-WebSocket:1.4.0"
 
-    implementation 'io.bimmergestalt:IDriveConnectKit:0.3'
-    implementation 'io.bimmergestalt:IDriveConnectKitAndroid:0.3'
+    implementation 'io.bimmergestalt:IDriveConnectKit:0.6'
+    implementation 'io.bimmergestalt:IDriveConnectKitAndroid:0.6'
 
     testImplementation 'junit:junit:4.+'
     testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.0'
