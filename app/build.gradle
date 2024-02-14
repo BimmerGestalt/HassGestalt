@@ -52,6 +52,11 @@ android {
         signingConfigs.release.keyAlias = System.getenv("KEYSTORE_ALIAS")
         signingConfigs.release.keyPassword = System.getenv("KEYSTORE_ALIAS_PASSWORD")
     }
+    applicationVariants.configureEach { variant ->
+        variant.outputs.each { output ->
+            output.outputFileName = "HassGestalt-${variant.name}.apk"
+        }
+    }
 
     buildFeatures {
         dataBinding true
