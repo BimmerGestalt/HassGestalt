@@ -69,8 +69,7 @@ object EntityIcon {
 			"scene" -> "mdi:palette-outline"
 			"switch" -> when(deviceClass) {
 				"outlet" -> if (state == "on") "mdi:power-plug" else "mdi:power-plug-off"
-				"switch" -> if (state == "on") "mdi:toggle-switch" else "mdi:toggle-switch-off"
-				else -> "mdi:flash"
+				else -> if (state == "on") "mdi:toggle-switch" else "mdi:toggle-switch-off"
 			}
 			else -> ""
 		}
