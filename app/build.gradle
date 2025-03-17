@@ -16,7 +16,6 @@ def isRunningOnCI = System.getenv("CI") == "true"
 
 android {
     compileSdkVersion 33
-    buildToolsVersion "30.0.2"
 
     androidGitVersion {
         hideBranches = [ 'main' ]
