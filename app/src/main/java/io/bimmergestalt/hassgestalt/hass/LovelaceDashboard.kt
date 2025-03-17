@@ -37,13 +37,13 @@ class LovelaceDashboard(val cards: List<LovelaceCard>) {
 			// flatten stacks
 			when (type) {
 				"vertical-stack" -> data.optJSONArray("cards")?.map {
-					if (it is JSONObject) LovelaceCard.parse(it) else null
-				}?.filterNotNull()?.also {
+					if (it is JSONObject) parseCards(it) else null
+				}?.filterNotNull()?.forEach {
 					result.addAll(it)
 				}
 				"horizontal-stack" -> data.optJSONArray("cards")?.map {
-					if (it is JSONObject) LovelaceCard.parse(it) else null
-				}?.filterNotNull()?.also {
+					if (it is JSONObject) parseCards(it) else null
+				}?.filterNotNull()?.forEach {
 					result.addAll(it)
 				}
 				else -> LovelaceCard.parse(data)?.let { result.add(it) }
