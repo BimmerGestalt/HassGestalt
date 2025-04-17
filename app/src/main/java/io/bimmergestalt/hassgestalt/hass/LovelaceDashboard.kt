@@ -110,6 +110,21 @@ sealed class LovelaceCard {
 						}
 					}?.filterNotNull() ?: emptyList())
 				}
+				data.optJSONObject("entities") != null -> {
+					// power-flow-card has a dictionary of roles to entities
+					val entityData = data.optJSONObject("entities")?.toMap()?.values?.mapNotNull {
+						when (it) {
+							is Map<*, *> -> listOf(it)
+							is List<*> -> it
+							else -> null
+						}
+					}?.flatten()
+						?.filterIsInstance<Map<String, Any?>>()
+						?.filter { (it["entity"] as? String)?.isNotEmpty() == true }
+						?.filter { it["hass_gestalt"] != false }
+						?: emptyList()
+					LovelaceCardEntities(entityData.map { LovelaceCardEntity((it["entity"] as? String) ?: "", it) } )
+				}
 				else -> null
 			}
 		}

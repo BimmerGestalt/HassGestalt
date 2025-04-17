@@ -158,4 +158,50 @@ class LovelaceDashboardTest {
 		val redHigh = lovelace.apply(source.copy(state = "65", stateText = "65 %"))
 		assertEquals(Color.parseColor("#db4438"), redHigh.color)
 	}
+
+	@Test
+	fun testPowerFlow() {
+		val json = JSONObject("""{"type":"custom:power-flow-card-plus","entities":{
+			"battery":{"entity":"","state_of_charge":"sensor.grid_fossil_fuel_percentage"},
+			"grid":{"entity":"sensor.eagle_200_meter_power_demand","secondary_info":{}},
+			"solar":{"display_zero_state":true,"secondary_info":{},"entity":"sensor.tesla_solar_grid_power"},
+			"individual":[{"entity":"sensor.juicebox_power","secondary_info":{},"name":"EV"},{"entity":"sensor.chillcat_inverter_energy","secondary_info":{},"name":"HVAC"}],
+			"home":{"secondary_info":{}}}
+		}""")
+
+		val lovelace = LovelaceCard.parse(json)
+		assertTrue(lovelace is LovelaceCardEntities)
+		lovelace as LovelaceCardEntities
+		assertEquals(4, lovelace.entities.size)
+	}
+	@Test
+	fun testPowerPartialFlow() {
+		val json = JSONObject("""{"type":"custom:power-flow-card-plus","entities":{
+			"battery":{"entity":"","state_of_charge":"sensor.grid_fossil_fuel_percentage"},
+			"grid":{"entity":"sensor.eagle_200_meter_power_demand","secondary_info":{}, "hass_gestalt": false},
+			"solar":{"display_zero_state":true,"secondary_info":{},"entity":"sensor.tesla_solar_grid_power"},
+			"individual":[{"entity":"sensor.juicebox_power","secondary_info":{},"name":"EV"},{"entity":"sensor.chillcat_inverter_energy","secondary_info":{},"name":"HVAC"}],
+			"home":{"secondary_info":{}}}
+		}""")
+
+		val lovelace = LovelaceCard.parse(json)
+		assertTrue(lovelace is LovelaceCardEntities)
+		lovelace as LovelaceCardEntities
+		assertEquals(3, lovelace.entities.size)
+	}
+	@Test
+	fun testPowerFlowHidden() {
+		val json = JSONObject("""{"type":"custom:power-flow-card-plus","entities":{
+			"battery":{"entity":"","state_of_charge":"sensor.grid_fossil_fuel_percentage"},
+			"grid":{"entity":"sensor.eagle_200_meter_power_demand","secondary_info":{}},
+			"solar":{"display_zero_state":true,"secondary_info":{},"entity":"sensor.tesla_solar_grid_power"},
+			"individual":[{"entity":"sensor.juicebox_power","secondary_info":{},"name":"EV"},{"entity":"sensor.chillcat_inverter_energy","secondary_info":{},"name":"HVAC"}],
+			"home":{"secondary_info":{}},
+			},
+			"hass_gestalt": false
+		}""")
+
+		val lovelace = LovelaceCard.parse(json)
+		assertNull(lovelace)
+	}
 }

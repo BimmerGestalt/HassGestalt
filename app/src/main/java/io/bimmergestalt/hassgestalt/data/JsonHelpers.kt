@@ -45,12 +45,31 @@ object JsonHelpers {
 	}
 
 	@Throws(JSONException::class)
+	fun JSONObject.values(): Iterable<Any?> {
+		val values = ArrayList<Any?>()
+		for (key in this.keys()) {
+			values.add(this.get(key))
+		}
+		return values
+	}
+
+	@Throws(JSONException::class)
 	fun JSONArray.toList(): List<Any?> {
 		val list: MutableList<Any?> = ArrayList(this.length())
 		for (i in 0 until this.length()) {
 			list.add(fromJson(this[i]))
 		}
 		return list
+	}
+
+	inline fun <reified R> JSONArray.filterIsInstance(): List<R> {
+		val result = ArrayList<R>()
+		for (i in 0 until this.length()) {
+			if (i is R) {
+				result.add(i)
+			}
+		}
+		return result
 	}
 
 	fun JSONArray.forEach(body: (Any?) -> Unit) {
