@@ -22,6 +22,15 @@ class LovelaceDashboard(val cards: List<LovelaceCard>) {
 			val cards = ArrayList<LovelaceCard>()
 			data.optJSONArray("views")?.forEach { tab ->
 				if (tab is JSONObject) {
+					tab.optJSONArray("sections")?.map { sectionData ->
+						if (sectionData is JSONObject) {
+							sectionData.optJSONArray("cards")?.map { cardData ->
+								if (cardData is JSONObject) {
+									cards.addAll(parseCards(cardData))
+								}
+							}
+						}
+					}
 					tab.optJSONArray("cards")?.map { cardData ->
 						if (cardData is JSONObject) {
 							cards.addAll(parseCards(cardData))
