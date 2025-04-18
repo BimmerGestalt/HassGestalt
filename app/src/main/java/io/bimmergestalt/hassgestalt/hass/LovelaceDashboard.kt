@@ -22,6 +22,15 @@ class LovelaceDashboard(val cards: List<LovelaceCard>) {
 			val cards = ArrayList<LovelaceCard>()
 			data.optJSONArray("views")?.forEach { tab ->
 				if (tab is JSONObject) {
+					tab.optJSONArray("sections")?.map { sectionData ->
+						if (sectionData is JSONObject) {
+							sectionData.optJSONArray("cards")?.map { cardData ->
+								if (cardData is JSONObject) {
+									cards.addAll(parseCards(cardData))
+								}
+							}
+						}
+					}
 					tab.optJSONArray("cards")?.map { cardData ->
 						if (cardData is JSONObject) {
 							cards.addAll(parseCards(cardData))
@@ -100,6 +109,21 @@ sealed class LovelaceCard {
 							LovelaceCardEntity((entityData["entity"] as? String) ?: "", cardData + entityData)
 						}
 					}?.filterNotNull() ?: emptyList())
+				}
+				data.optJSONObject("entities") != null -> {
+					// power-flow-card has a dictionary of roles to entities
+					val entityData = data.optJSONObject("entities")?.toMap()?.values?.mapNotNull {
+						when (it) {
+							is Map<*, *> -> listOf(it)
+							is List<*> -> it
+							else -> null
+						}
+					}?.flatten()
+						?.filterIsInstance<Map<String, Any?>>()
+						?.filter { (it["entity"] as? String)?.isNotEmpty() == true }
+						?.filter { it["hass_gestalt"] != false }
+						?: emptyList()
+					LovelaceCardEntities(entityData.map { LovelaceCardEntity((it["entity"] as? String) ?: "", it) } )
 				}
 				else -> null
 			}
